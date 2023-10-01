@@ -1,0 +1,15 @@
+[package]
+name = "cod_keeper"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = { version = "0.4.31", features = ["serde"] }
+inquire = "0.6.2"
+prettytable-rs = "0.10.0"
+serde = { version = "1.0.188", features = ["derive"] }
+serde_json = "1.0.107"
+strum = { version = "0.25", features = ["derive"] }
+strum_macros = "0.25"
