@@ -5,108 +5,110 @@ use crate::{GamePlayed, DAY_FMT};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Stats {
-    pub lifet_wins: usize,
-    pub lifet_losses: usize,
-    pub lifet_win_streak: usize,
-    pub lifet_loss_streak: usize,
-    pub today_wins: usize,
-    pub today_losses: usize,
-    pub today_win_streak: usize,
-    pub today_loss_streak: usize,
-    pub current_streak: usize,
-    pub is_streak_win: bool,
+    pub lifet: StatsGroup,
+    pub today: StatsGroup,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct StatsGroup {
+    pub wins: usize,
+    pub losses: usize,
+    pub win_streak: usize,
+    pub loss_streak: usize,
+    pub high_win_streak: usize,
+    pub high_loss_streak: usize,
+    pub last_was_win: bool,
 }
 
 impl Stats {
     pub fn new(games: &mut Vec<GamePlayed>, today: DateTime<Local>) -> Stats {
-        let mut total_wins = 0;
-        let mut total_losses = 0;
-        let mut total_curr_win_streak = 0;
-        let mut total_curr_loss_streak = 0;
-        let mut total_highest_win_streak = 0;
-        let mut total_highest_loss_streak = 0;
-
-        let mut total_last_was_win = false;
-
-        let mut todays_wins = 0;
-        let mut todays_losses = 0;
-        let mut todays_curr_win_streak = 0;
-        let mut todays_curr_loss_streak = 0;
-        let mut todays_highest_win_streak = 0;
-        let mut todays_highest_loss_streak = 0;
-
-        let mut today_last_was_win = false;
-
+        let mut stats = Stats {
+            lifet: StatsGroup {
+                wins: 0,
+                losses: 0,
+                win_streak: 0,
+                loss_streak: 0,
+                high_win_streak: 0,
+                high_loss_streak: 0,
+                last_was_win: true,
+            },
+            today: StatsGroup {
+                wins: 0,
+                losses: 0,
+                win_streak: 0,
+                loss_streak: 0,
+                high_win_streak: 0,
+                high_loss_streak: 0,
+                last_was_win: true,
+            },
+        };
         let today = today.format(DAY_FMT).to_string();
         games.iter_mut().for_each(|game| {
             if game.did_win {
-                if game.date_time.format(DAY_FMT).to_string() == today {
-                    todays_wins += 1;
-                    today_last_was_win = true;
-                    if today_last_was_win {
-                        todays_curr_win_streak += 1;
-                        if todays_highest_win_streak < todays_curr_win_streak {
-                            todays_highest_win_streak = todays_curr_win_streak;
-                        }
-                        if todays_highest_loss_streak < todays_curr_loss_streak {
-                            todays_highest_loss_streak = todays_curr_loss_streak;
-                        }
-                        todays_curr_loss_streak = 0;
-                    }
-                }
-                total_wins += 1;
-                total_last_was_win = true;
-                if total_last_was_win {
-                    total_curr_win_streak += 1;
-                    if total_highest_win_streak < total_curr_win_streak {
-                        total_highest_win_streak = total_curr_win_streak;
-                    }
-                    if total_highest_loss_streak < total_curr_loss_streak {
-                        total_highest_loss_streak = total_curr_loss_streak;
-                    }
-                    total_curr_loss_streak = 0;
-                }
+                stats.add_win(game, today.clone());
             } else {
-                if game.date_time.format(DAY_FMT).to_string() == today {
-                    todays_losses += 1;
-                    today_last_was_win = false;
-                    if !today_last_was_win {
-                        todays_curr_loss_streak += 1;
-                        if todays_highest_loss_streak < todays_curr_loss_streak {
-                            todays_highest_loss_streak = todays_curr_loss_streak;
-                        }
-                        if todays_highest_win_streak < todays_curr_win_streak {
-                            todays_highest_win_streak = todays_curr_win_streak;
-                        }
-                        todays_curr_win_streak = 0;
-                    }
-                }
-                total_losses += 1;
-                total_last_was_win = false;
-                if !total_last_was_win {
-                    total_curr_loss_streak += 1;
-                    if total_highest_loss_streak < total_curr_loss_streak {
-                        total_highest_loss_streak = total_curr_loss_streak;
-                    }
-                    if total_highest_win_streak < total_curr_win_streak {
-                        total_highest_win_streak = total_curr_win_streak;
-                    }
-                    total_curr_win_streak = 0;
-                }
+                stats.add_loss(game, today.clone());
             }
         });
 
-        Stats {
-            lifet_wins: total_wins,
-            lifet_losses: total_losses,
-            lifet_win_streak: total_highest_win_streak,
-            lifet_loss_streak: total_highest_loss_streak,
-            today_wins: todays_wins,
-            today_losses: todays_losses,
-            today_win_streak: todays_highest_win_streak,
-            today_loss_streak: todays_highest_loss_streak,
-            current_streak: 0,
-            is_streak_win: true,
+        stats
+    }
+
+    pub fn add_win(&mut self, game: &mut GamePlayed, today: String) {
+        if game.date_time.format(DAY_FMT).to_string() == today {
+            self.today.wins += 1;
+            self.today.last_was_win = true;
+            if self.today.last_was_win {
+                self.today.win_streak += 1;
+                if self.today.high_win_streak < self.today.win_streak {
+                    self.today.high_win_streak = self.today.win_streak;
+                }
+                if self.today.high_loss_streak < self.today.loss_streak {
+                    self.today.high_loss_streak = self.today.loss_streak;
+                }
+                self.today.loss_streak = 0;
+            }
+        }
+        self.lifet.wins += 1;
+        self.lifet.last_was_win = true;
+        if self.lifet.last_was_win {
+            self.lifet.win_streak += 1;
+            if self.lifet.high_win_streak < self.lifet.win_streak {
+                self.lifet.high_win_streak = self.lifet.win_streak;
+            }
+            if self.lifet.high_loss_streak < self.lifet.loss_streak {
+                self.lifet.high_loss_streak = self.lifet.loss_streak;
+            }
+            self.lifet.loss_streak = 0;
+        }
+    }
+
+    pub fn add_loss(&mut self, game: &mut GamePlayed, today: String) {
+        if game.date_time.format(DAY_FMT).to_string() == today {
+            self.today.losses += 1;
+            self.today.last_was_win = false;
+            if !self.today.last_was_win {
+                self.today.loss_streak += 1;
+                if self.today.high_loss_streak < self.today.loss_streak {
+                    self.today.high_loss_streak = self.today.loss_streak;
+                }
+                if self.today.high_win_streak < self.today.win_streak {
+                    self.today.high_win_streak = self.today.win_streak;
+                }
+                self.today.win_streak = 0;
+            }
+        }
+        self.lifet.losses += 1;
+        self.lifet.last_was_win = false;
+        if !self.lifet.last_was_win {
+            self.lifet.loss_streak += 1;
+            if self.lifet.high_loss_streak < self.lifet.loss_streak {
+                self.lifet.high_loss_streak = self.lifet.loss_streak;
+            }
+            if self.lifet.high_win_streak < self.lifet.win_streak {
+                self.lifet.high_win_streak = self.lifet.win_streak;
+            }
+            self.lifet.win_streak = 0;
         }
     }
 }
@@ -125,17 +127,25 @@ mod tests {
         assert_eq!(
             Stats::new(&mut games, Local::now()),
             Stats {
-                lifet_wins: 0,
-                lifet_losses: 0,
-                lifet_win_streak: 0,
-                lifet_loss_streak: 0,
-                today_wins: 0,
-                today_losses: 0,
-                today_win_streak: 0,
-                today_loss_streak: 0,
-                current_streak: 0,
-                is_streak_win: true,
-            }
+                lifet: StatsGroup {
+                    wins: 0,
+                    losses: 0,
+                    win_streak: 0,
+                    loss_streak: 0,
+                    high_win_streak: 0,
+                    high_loss_streak: 0,
+                    last_was_win: true,
+                },
+                today: StatsGroup {
+                    wins: 0,
+                    losses: 0,
+                    win_streak: 0,
+                    loss_streak: 0,
+                    high_win_streak: 0,
+                    high_loss_streak: 0,
+                    last_was_win: true,
+                },
+            },
         );
     }
 
@@ -159,17 +169,25 @@ mod tests {
                 Local.with_ymd_and_hms(2023, 09, 29, 0, 0, 0).unwrap()
             ),
             Stats {
-                lifet_wins: 1,
-                lifet_losses: 1,
-                lifet_win_streak: 1,
-                lifet_loss_streak: 1,
-                today_wins: 0,
-                today_losses: 0,
-                today_win_streak: 0,
-                today_loss_streak: 0,
-                current_streak: 0,
-                is_streak_win: true,
-            }
+                lifet: StatsGroup {
+                    wins: 1,
+                    losses: 1,
+                    win_streak: 1,
+                    loss_streak: 1,
+                    high_win_streak: 1,
+                    high_loss_streak: 1,
+                    last_was_win: true,
+                },
+                today: StatsGroup {
+                    wins: 0,
+                    losses: 0,
+                    win_streak: 0,
+                    loss_streak: 0,
+                    high_win_streak: 0,
+                    high_loss_streak: 0,
+                    last_was_win: true,
+                },
+            },
         );
     }
 
@@ -314,17 +332,25 @@ mod tests {
                 Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 0).unwrap()
             ),
             Stats {
-                lifet_wins: 18,
-                lifet_losses: 8,
-                lifet_win_streak: 6,
-                lifet_loss_streak: 2,
-                today_wins: 9,
-                today_losses: 4,
-                today_win_streak: 4,
-                today_loss_streak: 2,
-                current_streak: 0,
-                is_streak_win: true,
-            }
+                lifet: StatsGroup {
+                    wins: 18,
+                    losses: 8,
+                    win_streak: 6,
+                    loss_streak: 2,
+                    high_win_streak: 6,
+                    high_loss_streak: 2,
+                    last_was_win: true,
+                },
+                today: StatsGroup {
+                    wins: 9,
+                    losses: 4,
+                    win_streak: 4,
+                    loss_streak: 2,
+                    high_win_streak: 4,
+                    high_loss_streak: 2,
+                    last_was_win: true,
+                },
+            },
         );
     }
 }

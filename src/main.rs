@@ -12,13 +12,18 @@ use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter};
 
 const DAY_FMT: &str = "%m-%d-%Y";
-const FILE_NAME: &str = "stat_sheet_real.json";
+const FILE_NAME: &str = "stat_sheet_test.json";
 
 mod stats;
 
 fn main() {
     let mut games = load();
-    // display_lifetime_stats(&mut games);
+    let mut stats = Stats::new(&mut games, Local::now());
+
+    // TODO: add current streak to save msg.
+    // TODO: pick which stat sheet to use.
+    // TODO: add back to menu option.
+
     match Select::new(
         "What would you like to do?",
         MainMenuOption::iter().collect(),
@@ -27,9 +32,9 @@ fn main() {
     .unwrap()
     {
         MainMenuOption::DisplayStats => {
-            option_display_stats(&mut games);
+            option_display_stats(&mut games, &mut stats);
         }
-        MainMenuOption::EnterGames => option_enter_games(&mut games),
+        MainMenuOption::EnterGames => option_enter_games(&mut games, &mut stats),
     }
 
     save(&mut games);
@@ -84,7 +89,7 @@ impl PartialEq for GamePlayed {
     }
 }
 
-fn option_display_stats(games: &mut Vec<GamePlayed>) {
+fn option_display_stats(games: &mut Vec<GamePlayed>, stats: &mut Stats) {
     match Select::new(
         "What would you like to do?",
         DisplayStatsOption::iter().collect(),
@@ -106,11 +111,11 @@ fn option_display_stats(games: &mut Vec<GamePlayed>) {
             // table.set_format(*FORMAT_BOX_CHARS);
             // table.printstd();
         }
-        DisplayStatsOption::Lifetime => display_stats(games),
+        DisplayStatsOption::Lifetime => display_stats(games, stats),
     }
 }
 
-fn option_enter_games(games: &mut Vec<GamePlayed>) {
+fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats) {
     let mut keep_entering = true;
     while keep_entering {
         let did_win = Confirm::new("Did you win?")
@@ -128,11 +133,21 @@ fn option_enter_games(games: &mut Vec<GamePlayed>) {
         };
         games.push(game.clone());
         save(games);
-        display_stats(games);
+        display_stats(games, stats);
         println!(
-            "{} on {} saved.",
+            "{} on {} saved. {} Streak now {}.",
             if game.did_win { "Win" } else { "Loss" },
-            game.map
+            game.map,
+            if stats.today.last_was_win {
+                "Winning"
+            } else {
+                "Losing"
+            },
+            if stats.today.last_was_win {
+                stats.today.win_streak
+            } else {
+                stats.today.loss_streak
+            },
         );
         println!();
         keep_entering = Confirm::new("Another?")
@@ -141,16 +156,16 @@ fn option_enter_games(games: &mut Vec<GamePlayed>) {
             .unwrap();
     }
 
-    display_stats(games);
+    display_stats(games, stats);
 }
 
-fn display_stats(games: &mut Vec<GamePlayed>) {
+fn display_stats(games: &mut Vec<GamePlayed>, stats: &mut Stats) {
     println!();
-    build_final_table(Stats::new(games, Local::now())).printstd();
+    build_final_table(stats).printstd();
     println!();
 }
 
-fn build_final_table(stats: Stats) -> Table {
+fn build_final_table(stats: &mut Stats) -> Table {
     let mut lifetime_title_cell = Cell::new("Lifetime Stats")
         .with_style(Attr::Bold)
         // .with_style(Attr::Italic(true))
@@ -166,16 +181,16 @@ fn build_final_table(stats: Stats) -> Table {
     wrapper_table.add_row(Row::new(vec![today_title_cell, lifetime_title_cell]));
 
     let lifetime = build_stat_table(
-        stats.lifet_wins,
-        stats.lifet_losses,
-        stats.lifet_win_streak,
-        stats.lifet_loss_streak,
+        stats.lifet.wins,
+        stats.lifet.losses,
+        stats.lifet.win_streak,
+        stats.lifet.loss_streak,
     );
     let daily = build_stat_table(
-        stats.today_wins,
-        stats.today_losses,
-        stats.today_win_streak,
-        stats.today_loss_streak,
+        stats.today.wins,
+        stats.today.losses,
+        stats.today.win_streak,
+        stats.today.loss_streak,
     );
 
     wrapper_table.set_format(*format::consts::FORMAT_CLEAN);
