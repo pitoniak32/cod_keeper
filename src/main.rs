@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
-use inquire::{Confirm, Select};
+use inquire::Select;
+use menus::{MainMenuOption, DisplayStatsOption, DidWinOption};
 use prettytable::{
     color,
     format::{self, consts::FORMAT_BOX_CHARS, Alignment},
@@ -7,24 +8,23 @@ use prettytable::{
 };
 use serde::{Deserialize, Serialize};
 use stats::Stats;
-use std::fs::{self, File};
+use std::{fs::{self, File}, env};
 use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter};
 
 const DAY_FMT: &str = "%m-%d-%Y";
-const FILE_NAME: &str = "stat_sheet_real.json";
 
 mod stats;
+mod menus;
 
 fn main() {
-    let mut games = load();
+    let file_path = env::var("STATS_SHEET").unwrap_or("stat_sheet_test.json".to_string());
+
+    let mut games = load(&file_path);
     let mut stats = Stats::new(&mut games, Local::now());
 
-    // TODO: pick which stat sheet to use.
-    // TODO: add back to menu option.
-
     match Select::new(
-        &format!("What would you like to do? (stat_sheet: {})", FILE_NAME),
+        &format!("What would you like to do? (stat_sheet: {})", &file_path),
         MainMenuOption::iter().collect(),
     )
     .prompt()
@@ -33,23 +33,10 @@ fn main() {
         MainMenuOption::DisplayStats => {
             option_display_stats(&stats);
         }
-        MainMenuOption::EnterGames => option_enter_games(&mut games, &mut stats),
+        MainMenuOption::EnterGames => option_enter_games(&mut games, &mut stats, &file_path),
     }
 
-    save(&mut games);
-}
-
-#[derive(Serialize, Deserialize, Debug, EnumIter, Display, PartialEq, Eq)]
-enum MainMenuOption {
-    EnterGames,
-    DisplayStats,
-}
-
-#[derive(Serialize, Deserialize, Debug, EnumIter, Display, PartialEq, Eq)]
-enum DisplayStatsOption {
-    Lifetime,
-    CurrentStreak,
-    Day,
+    save(&mut games, &file_path);
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, EnumIter, Display, PartialEq, Eq)]
@@ -97,33 +84,33 @@ fn option_display_stats(stats: &Stats) {
     .prompt()
     .unwrap()
     {
-        DisplayStatsOption::Day => {
-            // let choice = Select::new("Which stats?", days).prompt().unwrap();
-
-            // let todays_wins = day_stats.iter().filter(|g| g.did_win).count();
-            // let mut table = Table::new();
-            // table.add_row(Row::new(vec![Cell::new("wins"), Cell::new("loses")]));
-            // table.add_row(Row::new(vec![
-            //     Cell::new(&todays_wins.to_string()),
-            //     Cell::new(&(day_stats.iter().count() - todays_wins).to_string()),
-            // ]));
-
-            // table.set_format(*FORMAT_BOX_CHARS);
-            // table.printstd();
+        DisplayStatsOption::Today => {
+            let mut table = build_stat_table(
+                stats.today.wins,
+                stats.today.losses,
+                stats.today.high_win_streak,
+                stats.today.high_loss_streak,
+            );
+            table.set_format(*FORMAT_BOX_CHARS);
+            table.printstd();
         }
         DisplayStatsOption::Lifetime => display_stats(&stats),
-        DisplayStatsOption::CurrentStreak => todo!(),
+        DisplayStatsOption::CurrentStreak => {
+            println!(
+                "You are on a {} streak of {}.",
+                if stats.today.last_was_win { "Winning" } else { "Losing" },
+                if stats.today.last_was_win {
+                    stats.lifet.win_streak
+                } else {
+                    stats.lifet.loss_streak
+                },
+            );
+        },
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, EnumIter, Display, PartialEq, Eq)]
-enum DidWinOption {
-    Yes,
-    No,
-    Quit,
-}
 
-fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats) {
+fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path: &str) {
     let mut did_win: DidWinOption = Select::new("Did you win?", DidWinOption::iter().collect())
         .prompt()
         .unwrap();
@@ -147,7 +134,7 @@ fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats) {
                 DidWinOption::Quit => break,
             };
             games.push(game.clone());
-            save(games);
+            save(games, file_path);
             if game.did_win {
                 stats.add_win(&game, &time.format(DAY_FMT).to_string());
             } else {
@@ -253,14 +240,14 @@ fn build_stat_table(wins: usize, loses: usize, win_streak: usize, loss_streak: u
     table
 }
 
-fn save(games: &mut Vec<GamePlayed>) {
+fn save(games: &mut Vec<GamePlayed>, file_path: &str) {
     games.sort_by(|a, b| a.date_time.cmp(&b.date_time));
-    serde_json::to_writer(File::create(FILE_NAME).unwrap(), &games).unwrap();
+    serde_json::to_writer(File::create(file_path).unwrap(), &games).unwrap();
 }
 
-fn load() -> Vec<GamePlayed> {
+fn load(file_path: &str) -> Vec<GamePlayed> {
     let mut games: Vec<GamePlayed> =
-        serde_json::from_str(&fs::read_to_string(FILE_NAME).unwrap()).unwrap();
+        serde_json::from_str(&fs::read_to_string(file_path).unwrap()).unwrap();
     games.sort_by(|a, b| a.date_time.cmp(&b.date_time));
     games
 }
