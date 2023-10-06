@@ -39,8 +39,8 @@ fn main() {
     save(&mut games, &file_path);
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, EnumIter, Display, PartialEq, Eq)]
-enum GunfightMap {
+#[derive(Serialize, Deserialize, Debug, Clone, EnumIter, Display, PartialEq, Eq, Hash)]
+pub enum GunfightMap {
     Asile9,
     Atrium,
     Bazaar,
@@ -60,8 +60,13 @@ enum GunfightMap {
     Station,
     Trench,
     VerdanskStadium,
-    None,
 }
+
+// impl fmt::Display for GunfightMap {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//       write!(f, "{}", self.to_string())
+//     }
+// }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct GamePlayed {
@@ -95,6 +100,19 @@ fn option_display_stats(stats: &Stats) {
             table.printstd();
         }
         DisplayStatsOption::Lifetime => display_stats(&stats),
+        DisplayStatsOption::Maps => {
+            println!();
+            println!("Lifetime:\n---");
+            stats.lifet.get_all_map_stats().iter().for_each(|item| {
+                println!("{}: {}", item.0, item.1);
+            });
+            println!();
+            println!("Today:\n---");
+            stats.today.get_all_map_stats().iter().for_each(|item| {
+                println!("{}: {}", item.0, item.1);
+            });
+            println!();
+        },
         DisplayStatsOption::CurrentStreak => {
             println!(
                 "You are on a {} streak of {}.",
@@ -156,6 +174,9 @@ fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path:
                     stats.lifet.loss_streak
                 },
             );
+            println!();
+            let map_stats = stats.lifet.get_map_stats(&game.map).expect("Could not find stats for this map for some reason. This is probably a bug.");
+            println!("You have {} wins, and {} losses on {}.", &map_stats.wins, &map_stats.losses, &game.map);
             println!();
             did_win = Select::new("Did you win?", DidWinOption::iter().collect())
                 .prompt()

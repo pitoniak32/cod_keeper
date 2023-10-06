@@ -13,6 +13,7 @@ pub enum DisplayStatsOption {
     Lifetime,
     CurrentStreak,
     Today,
+    Maps,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, EnumIter, Display, PartialEq, Eq)]

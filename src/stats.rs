@@ -1,7 +1,9 @@
+use std::{collections::HashMap, fmt};
+
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 
-use crate::{GamePlayed, DAY_FMT};
+use crate::{GamePlayed, DAY_FMT, GunfightMap};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Stats {
@@ -18,6 +20,29 @@ pub struct StatsGroup {
     pub win_streak: usize,
     pub loss_streak: usize,
     pub last_was_win: bool,
+    pub map_stats: HashMap<GunfightMap, MapStats>,
+}
+
+impl StatsGroup {
+    pub fn get_all_map_stats(&self) -> &HashMap<GunfightMap, MapStats> {
+        &self.map_stats
+    }
+
+    pub fn get_map_stats(&self, map: &GunfightMap) -> Option<&MapStats> {
+        self.map_stats.get(map)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct MapStats {
+    pub wins: usize,
+    pub losses: usize,
+}
+
+impl fmt::Display for MapStats {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+      write!(f, "w={}, l={}", self.wins, self.losses)
+    }
 }
 
 impl Stats {
@@ -31,6 +56,7 @@ impl Stats {
                 win_streak: 0,
                 loss_streak: 0,
                 last_was_win: true,
+                map_stats: HashMap::new(),
             },
             today: StatsGroup {
                 wins: 0,
@@ -40,6 +66,7 @@ impl Stats {
                 win_streak: 0,
                 loss_streak: 0,
                 last_was_win: true,
+                map_stats: HashMap::new(),
             },
         };
         let today = today.format(DAY_FMT).to_string();
@@ -56,6 +83,11 @@ impl Stats {
 
     pub fn add_win(&mut self, game: &GamePlayed, today: &str) {
         if game.date_time.format(DAY_FMT).to_string() == today {
+            if self.today.map_stats.contains_key(&game.map) {
+                self.today.map_stats.get_mut(&game.map).unwrap().wins += 1;
+            } else {
+                self.today.map_stats.insert(game.map.clone(), MapStats { wins: 1, losses: 0 });
+            }
             self.today.wins += 1;
             self.today.last_was_win = true;
             if self.today.last_was_win {
@@ -68,6 +100,11 @@ impl Stats {
                 }
                 self.today.loss_streak = 0;
             }
+        }
+        if self.lifet.map_stats.contains_key(&game.map) {
+            self.lifet.map_stats.get_mut(&game.map).unwrap().wins += 1;
+        } else {
+            self.lifet.map_stats.insert(game.map.clone(), MapStats { wins: 1, losses: 0 });
         }
         self.lifet.wins += 1;
         self.lifet.last_was_win = true;
@@ -85,6 +122,11 @@ impl Stats {
 
     pub fn add_loss(&mut self, game: &GamePlayed, today: &str) {
         if game.date_time.format(DAY_FMT).to_string() == today {
+            if self.today.map_stats.contains_key(&game.map) {
+                self.today.map_stats.get_mut(&game.map).unwrap().losses += 1;
+            } else {
+                self.today.map_stats.insert(game.map.clone(), MapStats { wins: 0, losses: 1 });
+            }
             self.today.losses += 1;
             self.today.last_was_win = false;
             if !self.today.last_was_win {
@@ -97,6 +139,11 @@ impl Stats {
                 }
                 self.today.win_streak = 0;
             }
+        }
+        if self.lifet.map_stats.contains_key(&game.map) {
+            self.lifet.map_stats.get_mut(&game.map).unwrap().losses += 1;
+        } else {
+            self.lifet.map_stats.insert(game.map.clone(), MapStats { wins: 0, losses: 1 });
         }
         self.lifet.losses += 1;
         self.lifet.last_was_win = false;
@@ -111,6 +158,7 @@ impl Stats {
             self.lifet.win_streak = 0;
         }
     }
+
 }
 
 #[cfg(test)]
@@ -129,8 +177,8 @@ mod tests {
         assert_eq!(
             Stats::new(&mut games, Local::now()),
             Stats {
-                lifet: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0, win_streak: 0, loss_streak: 0, last_was_win: true, },
-                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0,  win_streak: 0, loss_streak: 0, last_was_win: true, },
+                lifet: StatsGroup {wins:0,losses:0,high_win_streak:0,high_loss_streak:0,win_streak:0,loss_streak:0,last_was_win:true, map_stats: HashMap::new() },
+                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0,  win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: HashMap::new() },
             },
         );
     }
@@ -147,8 +195,8 @@ mod tests {
                 Local.with_ymd_and_hms(2023, 09, 29, 0, 0, 0).unwrap()
             ),
             Stats {
-                lifet: StatsGroup { wins: 1, losses: 1, high_win_streak: 1, high_loss_streak: 1,  win_streak: 1, loss_streak: 0, last_was_win: true, },
-                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0,  win_streak: 0, loss_streak: 0, last_was_win: true, },
+                lifet: StatsGroup { wins: 1, losses: 1, high_win_streak: 1, high_loss_streak: 1,  win_streak: 1, loss_streak: 0, last_was_win: true, map_stats: HashMap::new()},
+                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0,  win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: HashMap::new()},
             },
         );
     }
@@ -178,8 +226,8 @@ mod tests {
         assert_eq!(
             stats,
             Stats {
-                lifet: StatsGroup { wins: 3, losses: 1, high_win_streak: 3, high_loss_streak: 1, win_streak: 3, loss_streak: 0, last_was_win: true, },
-                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0, win_streak: 0, loss_streak: 0, last_was_win: true, },
+                lifet: StatsGroup { wins: 3, losses: 1, high_win_streak: 3, high_loss_streak: 1, win_streak: 3, loss_streak: 0, last_was_win: true, map_stats: HashMap::new()},
+                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0, win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: HashMap::new() },
             },
         );
     }
@@ -211,8 +259,8 @@ mod tests {
         assert_eq!(
             stats,
             Stats {
-                lifet: StatsGroup { wins: 2, losses: 3, high_win_streak: 2, high_loss_streak: 2, win_streak: 0, loss_streak: 2, last_was_win: false, },
-                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0, win_streak: 0, loss_streak: 0, last_was_win: true, },
+                lifet: StatsGroup { wins: 2, losses: 3, high_win_streak: 2, high_loss_streak: 2, win_streak: 0, loss_streak: 2, last_was_win: false, map_stats: HashMap::new()},
+                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0, win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: HashMap::new() },
             },
         );
     }
@@ -247,8 +295,8 @@ mod tests {
         assert_eq!(
             stats,
             Stats {
-                lifet: StatsGroup { wins: 5, losses: 2, high_win_streak: 5, high_loss_streak: 1, win_streak: 0, loss_streak: 1, last_was_win: false, },
-                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0, win_streak: 0, loss_streak: 0, last_was_win: true, },
+                lifet: StatsGroup { wins: 5, losses: 2, high_win_streak: 5, high_loss_streak: 1, win_streak: 0, loss_streak: 1, last_was_win: false, map_stats: HashMap::new() },
+                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0, win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: HashMap::new() },
             },
         );
     }
@@ -290,8 +338,8 @@ mod tests {
                 Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 0).unwrap()
             ),
             Stats {
-                lifet: StatsGroup { wins: 18, losses: 8, high_win_streak: 6, high_loss_streak: 2, win_streak: 0, loss_streak: 1, last_was_win: false, },
-                today: StatsGroup { wins: 9, losses: 4, high_win_streak: 4, high_loss_streak: 2, win_streak: 0, loss_streak: 1, last_was_win: false, },
+                lifet: StatsGroup { wins: 18, losses: 8, high_win_streak: 6, high_loss_streak: 2, win_streak: 0, loss_streak: 1, last_was_win: false, map_stats: HashMap::new() },
+                today: StatsGroup { wins: 9, losses: 4, high_win_streak: 4, high_loss_streak: 2, win_streak: 0, loss_streak: 1, last_was_win: false, map_stats: HashMap::new() },
             },
         );
     }
