@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
-use strum_macros::{EnumIter, Display};
-
+use strum_macros::{Display, EnumIter};
 
 #[derive(Serialize, Deserialize, Debug, EnumIter, Display, PartialEq, Eq)]
 pub enum MainMenuOption {
     EnterGames,
     DisplayStats,
+    Quit,
 }
 
 #[derive(Serialize, Deserialize, Debug, EnumIter, Display, PartialEq, Eq)]
@@ -14,6 +14,7 @@ pub enum DisplayStatsOption {
     CurrentStreak,
     Today,
     Maps,
+    Quit,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, EnumIter, Display, PartialEq, Eq)]

@@ -3,7 +3,7 @@ use std::{collections::HashMap, fmt};
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 
-use crate::{GamePlayed, DAY_FMT, GunfightMap};
+use crate::{GamePlayed, GunfightMap, DAY_FMT};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Stats {
@@ -41,7 +41,7 @@ pub struct MapStats {
 
 impl fmt::Display for MapStats {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-      write!(f, "w={}, l={}", self.wins, self.losses)
+        write!(f, "w={}, l={}", self.wins, self.losses)
     }
 }
 
@@ -86,7 +86,9 @@ impl Stats {
             if self.today.map_stats.contains_key(&game.map) {
                 self.today.map_stats.get_mut(&game.map).unwrap().wins += 1;
             } else {
-                self.today.map_stats.insert(game.map.clone(), MapStats { wins: 1, losses: 0 });
+                self.today
+                    .map_stats
+                    .insert(game.map.clone(), MapStats { wins: 1, losses: 0 });
             }
             self.today.wins += 1;
             self.today.last_was_win = true;
@@ -104,7 +106,9 @@ impl Stats {
         if self.lifet.map_stats.contains_key(&game.map) {
             self.lifet.map_stats.get_mut(&game.map).unwrap().wins += 1;
         } else {
-            self.lifet.map_stats.insert(game.map.clone(), MapStats { wins: 1, losses: 0 });
+            self.lifet
+                .map_stats
+                .insert(game.map.clone(), MapStats { wins: 1, losses: 0 });
         }
         self.lifet.wins += 1;
         self.lifet.last_was_win = true;
@@ -125,7 +129,9 @@ impl Stats {
             if self.today.map_stats.contains_key(&game.map) {
                 self.today.map_stats.get_mut(&game.map).unwrap().losses += 1;
             } else {
-                self.today.map_stats.insert(game.map.clone(), MapStats { wins: 0, losses: 1 });
+                self.today
+                    .map_stats
+                    .insert(game.map.clone(), MapStats { wins: 0, losses: 1 });
             }
             self.today.losses += 1;
             self.today.last_was_win = false;
@@ -143,7 +149,9 @@ impl Stats {
         if self.lifet.map_stats.contains_key(&game.map) {
             self.lifet.map_stats.get_mut(&game.map).unwrap().losses += 1;
         } else {
-            self.lifet.map_stats.insert(game.map.clone(), MapStats { wins: 0, losses: 1 });
+            self.lifet
+                .map_stats
+                .insert(game.map.clone(), MapStats { wins: 0, losses: 1 });
         }
         self.lifet.losses += 1;
         self.lifet.last_was_win = false;
@@ -158,7 +166,6 @@ impl Stats {
             self.lifet.win_streak = 0;
         }
     }
-
 }
 
 #[cfg(test)]

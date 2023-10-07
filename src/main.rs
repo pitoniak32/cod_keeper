@@ -1,6 +1,6 @@
 use chrono::{DateTime, Local};
 use inquire::Select;
-use menus::{MainMenuOption, DisplayStatsOption, DidWinOption};
+use menus::{DidWinOption, DisplayStatsOption, MainMenuOption};
 use prettytable::{
     color,
     format::{self, consts::FORMAT_BOX_CHARS, Alignment},
@@ -8,14 +8,17 @@ use prettytable::{
 };
 use serde::{Deserialize, Serialize};
 use stats::Stats;
-use std::{fs::{self, File}, env};
+use std::{
+    env,
+    fs::{self, File},
+};
 use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter};
 
 const DAY_FMT: &str = "%m-%d-%Y";
 
-mod stats;
 mod menus;
+mod stats;
 
 fn main() {
     let file_path = env::var("STATS_SHEET").unwrap_or("stat_sheet_test.json".to_string());
@@ -23,17 +26,20 @@ fn main() {
     let mut games = load(&file_path);
     let mut stats = Stats::new(&mut games, Local::now());
 
-    match Select::new(
-        &format!("What would you like to do? (stat_sheet: {})", &file_path),
-        MainMenuOption::iter().collect(),
-    )
-    .prompt()
-    .unwrap()
-    {
-        MainMenuOption::DisplayStats => {
-            option_display_stats(&stats);
+    loop {
+        match Select::new(
+            &format!("What would you like to do? (stat_sheet: {})", &file_path),
+            MainMenuOption::iter().collect(),
+        )
+        .prompt()
+        .unwrap()
+        {
+            MainMenuOption::DisplayStats => {
+                option_display_stats(&stats);
+            }
+            MainMenuOption::EnterGames => option_enter_games(&mut games, &mut stats, &file_path),
+            MainMenuOption::Quit => break,
         }
-        MainMenuOption::EnterGames => option_enter_games(&mut games, &mut stats, &file_path),
     }
 
     save(&mut games, &file_path);
@@ -82,51 +88,57 @@ impl PartialEq for GamePlayed {
 }
 
 fn option_display_stats(stats: &Stats) {
-    match Select::new(
-        "What would you like to do?",
-        DisplayStatsOption::iter().collect(),
-    )
-    .prompt()
-    .unwrap()
-    {
-        DisplayStatsOption::Today => {
-            let mut table = build_stat_table(
-                stats.today.wins,
-                stats.today.losses,
-                stats.today.high_win_streak,
-                stats.today.high_loss_streak,
-            );
-            table.set_format(*FORMAT_BOX_CHARS);
-            table.printstd();
+    loop {
+        match Select::new(
+            "What would you like to do?",
+            DisplayStatsOption::iter().collect(),
+        )
+        .prompt()
+        .unwrap()
+        {
+            DisplayStatsOption::Today => {
+                let mut table = build_stat_table(
+                    stats.today.wins,
+                    stats.today.losses,
+                    stats.today.high_win_streak,
+                    stats.today.high_loss_streak,
+                );
+                table.set_format(*FORMAT_BOX_CHARS);
+                table.printstd();
+            }
+            DisplayStatsOption::Lifetime => display_stats(&stats),
+            DisplayStatsOption::Maps => {
+                println!();
+                println!("Lifetime:\n---");
+                stats.lifet.get_all_map_stats().iter().for_each(|item| {
+                    println!("{}: {}", item.0, item.1);
+                });
+                println!();
+                println!("Today:\n---");
+                stats.today.get_all_map_stats().iter().for_each(|item| {
+                    println!("{}: {}", item.0, item.1);
+                });
+                println!();
+            }
+            DisplayStatsOption::CurrentStreak => {
+                println!(
+                    "You are on a {} streak of {}.",
+                    if stats.lifet.last_was_win {
+                        "Winning"
+                    } else {
+                        "Losing"
+                    },
+                    if stats.lifet.last_was_win {
+                        stats.lifet.win_streak
+                    } else {
+                        stats.lifet.loss_streak
+                    },
+                );
+            }
+            DisplayStatsOption::Quit => break,
         }
-        DisplayStatsOption::Lifetime => display_stats(&stats),
-        DisplayStatsOption::Maps => {
-            println!();
-            println!("Lifetime:\n---");
-            stats.lifet.get_all_map_stats().iter().for_each(|item| {
-                println!("{}: {}", item.0, item.1);
-            });
-            println!();
-            println!("Today:\n---");
-            stats.today.get_all_map_stats().iter().for_each(|item| {
-                println!("{}: {}", item.0, item.1);
-            });
-            println!();
-        },
-        DisplayStatsOption::CurrentStreak => {
-            println!(
-                "You are on a {} streak of {}.",
-                if stats.today.last_was_win { "Winning" } else { "Losing" },
-                if stats.today.last_was_win {
-                    stats.lifet.win_streak
-                } else {
-                    stats.lifet.loss_streak
-                },
-            );
-        },
     }
 }
-
 
 fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path: &str) {
     let mut did_win: DidWinOption = Select::new("Did you win?", DidWinOption::iter().collect())
@@ -175,8 +187,10 @@ fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path:
                 },
             );
             println!();
-            let map_stats = stats.lifet.get_map_stats(&game.map).expect("Could not find stats for this map for some reason. This is probably a bug.");
-            println!("You have {} wins, and {} losses on {}.", &map_stats.wins, &map_stats.losses, &game.map);
+            let map_stats = stats.lifet.get_map_stats(&game.map).expect(
+                "Could not find stats for this map for some reason. This is probably a bug.",
+            );
+            println!("{}: {} - {}", &game.map, &map_stats.wins, &map_stats.losses);
             println!();
             did_win = Select::new("Did you win?", DidWinOption::iter().collect())
                 .prompt()

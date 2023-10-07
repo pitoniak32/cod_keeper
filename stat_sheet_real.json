@@ -268,5 +268,30 @@
     "map": "Docks",
     "did_win": false,
     "date_time": "2023-10-05T19:57:50.126243131-04:00"
+  },
+  {
+    "map": "Livestock",
+    "did_win": false,
+    "date_time": "2023-10-06T20:05:41.219296048-04:00"
+  },
+  {
+    "map": "Station",
+    "did_win": true,
+    "date_time": "2023-10-06T20:12:03.775236975-04:00"
+  },
+  {
+    "map": "Speedball",
+    "did_win": true,
+    "date_time": "2023-10-06T20:18:52.045369240-04:00"
+  },
+  {
+    "map": "GulagShowers",
+    "did_win": false,
+    "date_time": "2023-10-06T20:26:01.601364376-04:00"
+  },
+  {
+    "map": "Pine",
+    "did_win": false,
+    "date_time": "2023-10-06T20:34:44.626663536-04:00"
   }
 ]
