@@ -14,12 +14,12 @@ pub enum DisplayStatsOption {
     CurrentStreak,
     Today,
     Maps,
-    Quit,
+    Back,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, EnumIter, Display, PartialEq, Eq)]
 pub enum DidWinOption {
     Yes,
     No,
-    Quit,
+    Back,
 }

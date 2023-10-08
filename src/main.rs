@@ -135,67 +135,78 @@ fn option_display_stats(stats: &Stats) {
                     },
                 );
             }
-            DisplayStatsOption::Quit => break,
+            DisplayStatsOption::Back => break,
         }
     }
 }
 
 fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path: &str) {
-    let mut did_win: DidWinOption = Select::new("Did you win?", DidWinOption::iter().collect())
-        .prompt()
-        .unwrap();
-    while did_win != DidWinOption::Quit {
-        if did_win != DidWinOption::Quit {
-            let map = Select::new("Which Map?", GunfightMap::iter().collect())
-                .prompt()
-                .unwrap();
-            let time = Local::now();
-            let game = match did_win {
-                DidWinOption::Yes => GamePlayed {
+    loop {
+        let map = Select::new("Which Map?", GunfightMap::iter().collect())
+            .prompt()
+            .unwrap();
+        let time = Local::now();
+        let did_win = Select::new("Did you win?", DidWinOption::iter().collect())
+            .prompt()
+            .unwrap();
+
+        let game: GamePlayed;
+
+        match did_win {
+            DidWinOption::Yes => {
+                game = GamePlayed {
                     map,
                     did_win: true,
                     date_time: time,
-                },
-                DidWinOption::No => GamePlayed {
+                };
+                games.push(game.clone());
+                save(games, file_path);
+                if game.did_win {
+                    stats.add_win(&game, &game.date_time.format(DAY_FMT).to_string());
+                } else {
+                    stats.add_loss(&game, &game.date_time.format(DAY_FMT).to_string());
+                }
+            }
+            DidWinOption::No => {
+                game = GamePlayed {
                     map,
                     did_win: false,
                     date_time: time,
-                },
-                DidWinOption::Quit => break,
-            };
-            games.push(game.clone());
-            save(games, file_path);
-            if game.did_win {
-                stats.add_win(&game, &time.format(DAY_FMT).to_string());
-            } else {
-                stats.add_loss(&game, &time.format(DAY_FMT).to_string());
+                };
+                games.push(game.clone());
+                save(games, file_path);
+                if game.did_win {
+                    stats.add_win(&game, &game.date_time.format(DAY_FMT).to_string());
+                } else {
+                    stats.add_loss(&game, &game.date_time.format(DAY_FMT).to_string());
+                }
             }
-            display_stats(stats);
-            println!(
-                "{} on {} saved. {} Streak now {}.",
-                if game.did_win { "Win" } else { "Loss" },
-                game.map,
-                if stats.today.last_was_win {
-                    "Winning"
-                } else {
-                    "Losing"
-                },
-                if stats.today.last_was_win {
-                    stats.lifet.win_streak
-                } else {
-                    stats.lifet.loss_streak
-                },
-            );
-            println!();
-            let map_stats = stats.lifet.get_map_stats(&game.map).expect(
-                "Could not find stats for this map for some reason. This is probably a bug.",
-            );
-            println!("{}: {} - {}", &game.map, &map_stats.wins, &map_stats.losses);
-            println!();
-            did_win = Select::new("Did you win?", DidWinOption::iter().collect())
-                .prompt()
-                .unwrap();
+            DidWinOption::Back => break,
         }
+
+        display_stats(stats);
+        println!(
+            "{} on {} saved. {} Streak now {}.",
+            if game.did_win { "Win" } else { "Loss" },
+            game.map,
+            if stats.today.last_was_win {
+                "Winning"
+            } else {
+                "Losing"
+            },
+            if stats.today.last_was_win {
+                stats.lifet.win_streak
+            } else {
+                stats.lifet.loss_streak
+            },
+        );
+        let map_stats = stats
+            .lifet
+            .get_map_stats(&game.map)
+            .expect("Could not find stats for this map for some reason. This is probably a bug.");
+        println!();
+        println!("{}: {} - {}", &game.map, &map_stats.wins, &map_stats.losses);
+        println!();
     }
 
     display_stats(stats);
