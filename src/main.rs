@@ -145,6 +145,15 @@ fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path:
         let map = Select::new("Which Map?", GunfightMap::iter().collect())
             .prompt()
             .unwrap();
+        {
+            let map_stats = stats.lifet.get_map_stats(&map).expect(
+                "Could not find stats for this map for some reason. This is probably a bug.",
+            );
+            println!();
+            println!("{}: {} - {}", &map, &map_stats.wins, &map_stats.losses);
+            println!();
+        }
+
         let time = Local::now();
         let did_win = Select::new("Did you win?", DidWinOption::iter().collect())
             .prompt()
@@ -159,13 +168,6 @@ fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path:
                     did_win: true,
                     date_time: time,
                 };
-                games.push(game.clone());
-                save(games, file_path);
-                if game.did_win {
-                    stats.add_win(&game, &game.date_time.format(DAY_FMT).to_string());
-                } else {
-                    stats.add_loss(&game, &game.date_time.format(DAY_FMT).to_string());
-                }
             }
             DidWinOption::No => {
                 game = GamePlayed {
@@ -173,15 +175,16 @@ fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path:
                     did_win: false,
                     date_time: time,
                 };
-                games.push(game.clone());
-                save(games, file_path);
-                if game.did_win {
-                    stats.add_win(&game, &game.date_time.format(DAY_FMT).to_string());
-                } else {
-                    stats.add_loss(&game, &game.date_time.format(DAY_FMT).to_string());
-                }
             }
             DidWinOption::Back => break,
+        }
+
+        games.push(game.clone());
+        save(games, file_path);
+        if game.did_win {
+            stats.add_win(&game, &game.date_time.format(DAY_FMT).to_string());
+        } else {
+            stats.add_loss(&game, &game.date_time.format(DAY_FMT).to_string());
         }
 
         display_stats(stats);
@@ -200,13 +203,14 @@ fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path:
                 stats.lifet.loss_streak
             },
         );
-        let map_stats = stats
-            .lifet
-            .get_map_stats(&game.map)
-            .expect("Could not find stats for this map for some reason. This is probably a bug.");
-        println!();
-        println!("{}: {} - {}", &game.map, &map_stats.wins, &map_stats.losses);
-        println!();
+        {
+            let map_stats = stats.lifet.get_map_stats(&game.map).expect(
+                "Could not find stats for this map for some reason. This is probably a bug.",
+            );
+            println!();
+            println!("{}: {} - {}", &game.map, &map_stats.wins, &map_stats.losses);
+            println!();
+        }
     }
 
     display_stats(stats);
