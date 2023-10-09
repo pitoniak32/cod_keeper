@@ -192,18 +192,24 @@ mod tests {
 
     #[test]
     fn test_stats_all_one_not_today() {
+        // Arrange
         let mut games: Vec<GamePlayed> = vec![
             GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 1).unwrap(), },
             GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 2).unwrap(), },
         ];
+        let mut maps_lifet = HashMap::new();
+        maps_lifet.insert(GunfightMap::Asile9, MapStats { wins: 1, losses: 1 });
+        let maps_today = HashMap::new();
+
+        // Act / Assert
         assert_eq!(
             Stats::new(
                 &mut games,
                 Local.with_ymd_and_hms(2023, 09, 29, 0, 0, 0).unwrap()
             ),
             Stats {
-                lifet: StatsGroup { wins: 1, losses: 1, high_win_streak: 1, high_loss_streak: 1,  win_streak: 1, loss_streak: 0, last_was_win: true, map_stats: HashMap::new()},
-                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0,  win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: HashMap::new()},
+                lifet: StatsGroup { wins: 1, losses: 1, high_win_streak: 1, high_loss_streak: 1,  win_streak: 1, loss_streak: 0, last_was_win: true, map_stats: maps_lifet },
+                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0,  win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: maps_today },
             },
         );
     }
@@ -215,6 +221,10 @@ mod tests {
             GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 1).unwrap(), },
             GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 2).unwrap(), },
         ];
+        let mut maps_lifet = HashMap::new();
+        maps_lifet.insert(GunfightMap::Asile9, MapStats { wins: 2, losses: 1 });
+        maps_lifet.insert(GunfightMap::Docks, MapStats { wins: 1, losses: 0 });
+        let maps_today = HashMap::new();
 
         // Act
         let mut stats = Stats::new(
@@ -233,8 +243,8 @@ mod tests {
         assert_eq!(
             stats,
             Stats {
-                lifet: StatsGroup { wins: 3, losses: 1, high_win_streak: 3, high_loss_streak: 1, win_streak: 3, loss_streak: 0, last_was_win: true, map_stats: HashMap::new()},
-                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0, win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: HashMap::new() },
+                lifet: StatsGroup { wins: 3, losses: 1, high_win_streak: 3, high_loss_streak: 1, win_streak: 3, loss_streak: 0, last_was_win: true, map_stats: maps_lifet },
+                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0, win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: maps_today },
             },
         );
     }
@@ -247,6 +257,10 @@ mod tests {
             GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 2).unwrap(), },
             GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 3).unwrap(), },
         ];
+        let mut maps_lifet = HashMap::new();
+        maps_lifet.insert(GunfightMap::Asile9, MapStats { wins: 2, losses: 2 });
+        maps_lifet.insert(GunfightMap::Docks, MapStats { wins: 0, losses: 1 });
+        let maps_today = HashMap::new();
 
         // Act
         let mut stats = Stats::new(
@@ -266,8 +280,8 @@ mod tests {
         assert_eq!(
             stats,
             Stats {
-                lifet: StatsGroup { wins: 2, losses: 3, high_win_streak: 2, high_loss_streak: 2, win_streak: 0, loss_streak: 2, last_was_win: false, map_stats: HashMap::new()},
-                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0, win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: HashMap::new() },
+                lifet: StatsGroup { wins: 2, losses: 3, high_win_streak: 2, high_loss_streak: 2, win_streak: 0, loss_streak: 2, last_was_win: false, map_stats: maps_lifet },
+                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0, win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: maps_today },
             },
         );
     }
@@ -278,11 +292,15 @@ mod tests {
         let mut games: Vec<GamePlayed> = vec![
             GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 1).unwrap(), },
             GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 2).unwrap(), },
-            GamePlayed { map: GunfightMap::Asile9, did_win: true, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 3).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 3).unwrap(), },
             // New day
             GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 27, 0, 0, 2).unwrap(), },
-            GamePlayed { map: GunfightMap::Asile9, did_win: true, date_time: Local.with_ymd_and_hms(2023, 09, 27, 0, 0, 3).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 27, 0, 0, 3).unwrap(), },
         ];
+        let mut maps_lifet = HashMap::new();
+        maps_lifet.insert(GunfightMap::Asile9, MapStats { wins: 5, losses: 1 });
+        maps_lifet.insert(GunfightMap::Docks, MapStats { wins: 0, losses: 1 });
+        let maps_today = HashMap::new();
 
         // Act
         let mut stats = Stats::new(
@@ -302,8 +320,8 @@ mod tests {
         assert_eq!(
             stats,
             Stats {
-                lifet: StatsGroup { wins: 5, losses: 2, high_win_streak: 5, high_loss_streak: 1, win_streak: 0, loss_streak: 1, last_was_win: false, map_stats: HashMap::new() },
-                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0, win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: HashMap::new() },
+                lifet: StatsGroup { wins: 5, losses: 2, high_win_streak: 5, high_loss_streak: 1, win_streak: 0, loss_streak: 1, last_was_win: false, map_stats: maps_lifet },
+                today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0, win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: maps_today },
             },
         );
     }
@@ -339,15 +357,60 @@ mod tests {
             GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 12).unwrap(), },
             GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 13).unwrap(), },
         ];
+        let mut maps_lifet = HashMap::new();
+        maps_lifet.insert(GunfightMap::Asile9, MapStats { wins: 18, losses: 8 });
+        let mut maps_today = HashMap::new();
+        maps_today.insert(GunfightMap::Asile9, MapStats { wins: 9, losses: 4 });
         assert_eq!(
             Stats::new(
                 &mut games,
                 Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 0).unwrap()
             ),
             Stats {
-                lifet: StatsGroup { wins: 18, losses: 8, high_win_streak: 6, high_loss_streak: 2, win_streak: 0, loss_streak: 1, last_was_win: false, map_stats: HashMap::new() },
-                today: StatsGroup { wins: 9, losses: 4, high_win_streak: 4, high_loss_streak: 2, win_streak: 0, loss_streak: 1, last_was_win: false, map_stats: HashMap::new() },
+                lifet: StatsGroup { wins: 18, losses: 8, high_win_streak: 6, high_loss_streak: 2, win_streak: 0, loss_streak: 1, last_was_win: false, map_stats: maps_lifet },
+                today: StatsGroup { wins: 9, losses: 4, high_win_streak: 4, high_loss_streak: 2, win_streak: 0, loss_streak: 1, last_was_win: false, map_stats: maps_today },
             },
+        );
+    }
+
+    #[test]
+    fn test_stats_get_map() {
+        let mut games: Vec<GamePlayed> = vec![
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 1).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 2).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 27, 0, 0, 2).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Hill, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 3).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::GulagShowers, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 4).unwrap(), },
+        ];
+        assert_eq!(
+            Stats::new(
+                &mut games,
+                Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 0).unwrap()
+            ).lifet.get_map_stats(&GunfightMap::Asile9),
+            Some(&MapStats {
+                losses: 2,
+                wins: 1,
+            }),
+        );
+        assert_eq!(
+            Stats::new(
+                &mut games,
+                Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 0).unwrap()
+            ).lifet.get_map_stats(&GunfightMap::Hill),
+            Some(&MapStats {
+                losses: 0,
+                wins: 1,
+            }),
+        );
+        assert_eq!(
+            Stats::new(
+                &mut games,
+                Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 0).unwrap()
+            ).lifet.get_map_stats(&GunfightMap::GulagShowers),
+            Some(&MapStats {
+                losses: 1,
+                wins: 0,
+            }),
         );
     }
 }
