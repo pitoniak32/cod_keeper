@@ -180,7 +180,10 @@ mod tests {
 
     #[test]
     fn test_stats_empty() {
+        // Arrange
         let mut games: Vec<GamePlayed> = Vec::new();
+
+        // Act / Assert
         assert_eq!(
             Stats::new(&mut games, Local::now()),
             Stats {
@@ -239,7 +242,7 @@ mod tests {
             "09-29-2023",
         );
 
-        // Asser
+        // Assert
         assert_eq!(
             stats,
             Stats {
@@ -276,7 +279,7 @@ mod tests {
             "09-29-2023",
         );
 
-        // Asser
+        // Assert
         assert_eq!(
             stats,
             Stats {
@@ -316,7 +319,7 @@ mod tests {
             "09-29-2023",
         );
 
-        // Asser
+        // Assert
         assert_eq!(
             stats,
             Stats {
@@ -328,6 +331,7 @@ mod tests {
 
     #[test]
     fn test_stats_all_one_today() {
+        // Arrange
         let mut games: Vec<GamePlayed> = vec![
             GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 1).unwrap(), },
             GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 2).unwrap(), },
@@ -361,6 +365,8 @@ mod tests {
         maps_lifet.insert(GunfightMap::Asile9, MapStats { wins: 18, losses: 8 });
         let mut maps_today = HashMap::new();
         maps_today.insert(GunfightMap::Asile9, MapStats { wins: 9, losses: 4 });
+
+        // Act / Assert
         assert_eq!(
             Stats::new(
                 &mut games,
@@ -375,6 +381,7 @@ mod tests {
 
     #[test]
     fn test_stats_get_map() {
+        // Arrange
         let mut games: Vec<GamePlayed> = vec![
             GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 1).unwrap(), },
             GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 2).unwrap(), },
@@ -382,6 +389,8 @@ mod tests {
             GamePlayed { did_win: true, map: GunfightMap::Hill, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 3).unwrap(), },
             GamePlayed { did_win: false, map: GunfightMap::GulagShowers, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 4).unwrap(), },
         ];
+
+        // Act / Assert
         assert_eq!(
             Stats::new(
                 &mut games,
