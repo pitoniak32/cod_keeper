@@ -41,7 +41,7 @@ pub struct MapStats {
 
 impl fmt::Display for MapStats {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "w={}, l={}", self.wins, self.losses)
+        write!(f, "{} - {}", self.wins, self.losses)
     }
 }
 
