@@ -226,7 +226,6 @@ fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path:
                     println!();
                 }
 
-                display_stats(stats);
             }
         }
     }
