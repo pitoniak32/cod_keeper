@@ -1,4 +1,5 @@
 use chrono::{DateTime, Local};
+use clap::{Args, Parser};
 use inquire::Select;
 use map::GunfightMap;
 use menus::{DidWinOption, DisplayStatsOption, MainMenuOption};
@@ -10,11 +11,10 @@ use prettytable::{
 use serde::{Deserialize, Serialize};
 use stats::{Stats, StatsGroup};
 use std::{
-    env,
     fs::{self, File},
+    path::{Path, PathBuf},
 };
 use strum::IntoEnumIterator;
-use strum_macros::{Display, EnumIter};
 
 const DAY_FMT: &str = "%m-%d-%Y";
 
@@ -22,17 +22,39 @@ mod map;
 mod menus;
 mod stats;
 
+#[derive(Parser, Debug)]
+#[command(author, version, about)]
+#[command(arg_required_else_help = true)]
+pub struct Cli {
+    #[clap(flatten)]
+    pub args: SharedArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct SharedArgs {
+    #[arg(short, long)]
+    stats_path: PathBuf,
+}
+
 fn main() {
-    let file_path = env::var("STATS_SHEET").unwrap_or("stat_sheet_test.json".to_string());
+    let cli = Cli::parse();
+
+    let file_path = cli.args.stats_path;
+
+    if !file_path.exists() {
+        eprintln!("[ERROR]: Provided stats sheet path [{file_path:?}] doesn't exist.");
+        return
+    }
 
     let mut games = load(&file_path);
     let mut stats = Stats::new(&mut games, Local::now());
 
-    dbg!(&stats);
-
     loop {
         match Select::new(
-            &format!("What would you like to do? (stat_sheet: {})", &file_path),
+            &format!(
+                "What would you like to do? (stat_sheet: {})",
+                &file_path.to_string_lossy()
+            ),
             MainMenuOption::iter().collect(),
         )
         .prompt()
@@ -113,7 +135,7 @@ fn option_display_stats(stats: &Stats) {
     }
 }
 
-fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path: &str) {
+fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path: &Path) {
     loop {
         match Select::new("Which Map?", GunfightMap::iter().collect())
             .prompt()
@@ -260,12 +282,12 @@ fn build_stat_table(stats: &StatsGroup) -> Table {
     table
 }
 
-fn save(games: &mut Vec<GamePlayed>, file_path: &str) {
+fn save(games: &mut Vec<GamePlayed>, file_path: &Path) {
     games.sort_by(|a, b| a.date_time.cmp(&b.date_time));
     serde_json::to_writer_pretty(File::create(file_path).unwrap(), &games).unwrap();
 }
 
-fn load(file_path: &str) -> Vec<GamePlayed> {
+fn load(file_path: &Path) -> Vec<GamePlayed> {
     let mut games: Vec<GamePlayed> =
         serde_json::from_str(&fs::read_to_string(file_path).unwrap()).unwrap();
     games.sort_by(|a, b| a.date_time.cmp(&b.date_time));
