@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use inquire::Select;
+use map::GunfightMap;
 use menus::{DidWinOption, DisplayStatsOption, MainMenuOption};
 use prettytable::{
     color,
@@ -17,6 +18,7 @@ use strum_macros::{Display, EnumIter};
 
 const DAY_FMT: &str = "%m-%d-%Y";
 
+mod map;
 mod menus;
 mod stats;
 
@@ -44,37 +46,6 @@ fn main() {
 
     save(&mut games, &file_path);
 }
-
-#[derive(Serialize, Deserialize, Debug, Clone, EnumIter, Display, PartialEq, Eq, Hash, Default)]
-pub enum GunfightMap {
-    #[default]
-    Back,
-    Asile9,
-    Atrium,
-    Bazaar,
-    Cargo,
-    Docks,
-    Drainage,
-    GulagShowers,
-    Hill,
-    King,
-    Livestock,
-    Pine,
-    Rust,
-    Shipment,
-    Shoothouse,
-    Speedball,
-    Stack,
-    Station,
-    Trench,
-    VerdanskStadium,
-}
-
-// impl fmt::Display for GunfightMap {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-//       write!(f, "{}", self.to_string())
-//     }
-// }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct GamePlayed {
@@ -110,28 +81,22 @@ fn option_display_stats(stats: &Stats) {
             }
             DisplayStatsOption::Lifetime => display_stats(&stats),
             DisplayStatsOption::OneMap => {
-                let map = &Select::new("Which Map?", GunfightMap::iter().filter(|m| m != &GunfightMap::Back).collect())
-                    .prompt()
-                    .unwrap();
+                let map = &Select::new(
+                    "Which Map?",
+                    GunfightMap::iter()
+                        .filter(|m| m != &GunfightMap::Back)
+                        .collect(),
+                )
+                .prompt()
+                .unwrap();
                 if let Some(map_stats) = stats.lifet.get_map_stats(map) {
                     println!();
                     println!("{}: {}", map, map_stats);
                     println!();
                 }
-                
-            },
+            }
             DisplayStatsOption::Maps => {
-                println!();
-                println!("Lifetime:\n---");
-                stats.lifet.get_all_map_stats().iter().for_each(|item| {
-                    println!("{}: {}", item.0, item.1);
-                });
-                println!();
-                println!("Today:\n---");
-                stats.today.get_all_map_stats().iter().for_each(|item| {
-                    println!("{}: {}", item.0, item.1);
-                });
-                println!();
+                stats.display_map_stats();
             }
             DisplayStatsOption::CurrentStreak => {
                 println!(
@@ -225,7 +190,6 @@ fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path:
                     println!("{}: {} - {}", &game.map, &map_stats.wins, &map_stats.losses);
                     println!();
                 }
-
             }
         }
     }

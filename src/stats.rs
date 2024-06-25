@@ -1,9 +1,9 @@
-use std::{collections::HashMap, fmt};
+use std::collections::HashMap;
 
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 
-use crate::{GamePlayed, GunfightMap, DAY_FMT};
+use crate::{map::MapStats, GamePlayed, GunfightMap, DAY_FMT};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Stats {
@@ -30,18 +30,6 @@ impl StatsGroup {
 
     pub fn get_map_stats(&self, map: &GunfightMap) -> Option<&MapStats> {
         self.map_stats.get(map)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct MapStats {
-    pub wins: usize,
-    pub losses: usize,
-}
-
-impl fmt::Display for MapStats {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} - {}", self.wins, self.losses)
     }
 }
 
@@ -165,6 +153,35 @@ impl Stats {
             }
             self.lifet.win_streak = 0;
         }
+    }
+
+    pub fn display_map_stats(&self) {
+        println!();
+        println!("Lifetime:\n---");
+        let mut life_map_stats = self.lifet.get_all_map_stats().iter().collect::<Vec<_>>();
+
+        life_map_stats.sort_by(|a, b| {
+            b.1.get_win_percentage()
+                .total_cmp(&a.1.get_win_percentage())
+        });
+
+        life_map_stats.iter().for_each(|m| {
+            println!("{}: {} ({:.0} %)", m.0, m.1, m.1.get_win_percentage());
+        });
+
+        println!();
+        println!("Today:\n---");
+        let mut today_map_stats = self.today.get_all_map_stats().iter().collect::<Vec<_>>();
+
+        today_map_stats.sort_by(|a, b| {
+            b.1.get_win_percentage()
+                .total_cmp(&a.1.get_win_percentage())
+        });
+
+        today_map_stats.iter().for_each(|m| {
+            println!("{}: {} ({:.0} %)", m.0, m.1, m.1.get_win_percentage());
+        });
+        println!();
     }
 }
 
