@@ -31,6 +31,13 @@ impl StatsGroup {
     pub fn get_map_stats(&self, map: &GunfightMap) -> Option<&MapStats> {
         self.map_stats.get(map)
     }
+
+    pub fn get_win_percentage(&self) -> f32 {
+        if self.wins + self.losses == 0 {
+            return 0.0;
+        }
+        (self.wins as f32 / (self.wins + self.losses) as f32) * 100.0
+    }
 }
 
 impl Stats {
@@ -166,7 +173,7 @@ impl Stats {
         });
 
         life_map_stats.iter().for_each(|m| {
-            println!("{}: {} ({:.0} %)", m.0, m.1, m.1.get_win_percentage());
+            println!("{}: {}", m.0, m.1);
         });
 
         println!();
@@ -179,7 +186,7 @@ impl Stats {
         });
 
         today_map_stats.iter().for_each(|m| {
-            println!("{}: {} ({:.0} %)", m.0, m.1, m.1.get_win_percentage());
+            println!("{}: {}", m.0, m.1);
         });
         println!();
     }

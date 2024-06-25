@@ -8,7 +8,7 @@ use prettytable::{
     row, Attr, Cell, Row, Table,
 };
 use serde::{Deserialize, Serialize};
-use stats::Stats;
+use stats::{Stats, StatsGroup};
 use std::{
     env,
     fs::{self, File},
@@ -27,6 +27,8 @@ fn main() {
 
     let mut games = load(&file_path);
     let mut stats = Stats::new(&mut games, Local::now());
+
+    dbg!(&stats);
 
     loop {
         match Select::new(
@@ -70,12 +72,7 @@ fn option_display_stats(stats: &Stats) {
         .unwrap()
         {
             DisplayStatsOption::Today => {
-                let mut table = build_stat_table(
-                    stats.today.wins,
-                    stats.today.losses,
-                    stats.today.high_win_streak,
-                    stats.today.high_loss_streak,
-                );
+                let mut table = build_stat_table(&stats.today);
                 table.set_format(*FORMAT_BOX_CHARS);
                 table.printstd();
             }
@@ -90,9 +87,7 @@ fn option_display_stats(stats: &Stats) {
                 .prompt()
                 .unwrap();
                 if let Some(map_stats) = stats.lifet.get_map_stats(map) {
-                    println!();
-                    println!("{}: {}", map, map_stats);
-                    println!();
+                    println!("{map}: {map_stats}");
                 }
             }
             DisplayStatsOption::Maps => {
@@ -216,18 +211,8 @@ fn build_final_table(stats: &Stats) -> Table {
     let mut wrapper_table = Table::new();
     wrapper_table.add_row(Row::new(vec![today_title_cell, lifetime_title_cell]));
 
-    let lifetime = build_stat_table(
-        stats.lifet.wins,
-        stats.lifet.losses,
-        stats.lifet.high_win_streak,
-        stats.lifet.high_loss_streak,
-    );
-    let daily = build_stat_table(
-        stats.today.wins,
-        stats.today.losses,
-        stats.today.high_win_streak,
-        stats.today.high_loss_streak,
-    );
+    let lifetime = build_stat_table(&stats.lifet);
+    let daily = build_stat_table(&stats.today);
 
     wrapper_table.set_format(*format::consts::FORMAT_CLEAN);
     wrapper_table.add_row(row![daily, lifetime]);
@@ -235,29 +220,35 @@ fn build_final_table(stats: &Stats) -> Table {
     wrapper_table
 }
 
-fn build_stat_table(wins: usize, loses: usize, win_streak: usize, loss_streak: usize) -> Table {
+fn build_stat_table(stats: &StatsGroup) -> Table {
     let mut table = Table::new();
     table.add_row(Row::new(vec![
         Cell::new("Dub's"),
-        Cell::new(&wins.to_string())
+        Cell::new(&stats.wins.to_string())
+            .with_style(Attr::Bold)
+            .with_style(Attr::ForegroundColor(color::GREEN)),
+    ]));
+    table.add_row(Row::new(vec![
+        Cell::new("Dub %"),
+        Cell::new(&format!("{:.2}", &stats.get_win_percentage()))
             .with_style(Attr::Bold)
             .with_style(Attr::ForegroundColor(color::GREEN)),
     ]));
     table.add_row(Row::new(vec![
         Cell::new("Longest Dub Streak"),
-        Cell::new(&win_streak.to_string())
+        Cell::new(&stats.win_streak.to_string())
             .with_style(Attr::Bold)
             .with_style(Attr::ForegroundColor(color::GREEN)),
     ]));
     table.add_row(Row::new(vec![
         Cell::new("L's"),
-        Cell::new(&loses.to_string())
+        Cell::new(&stats.losses.to_string())
             .with_style(Attr::Bold)
             .with_style(Attr::ForegroundColor(color::RED)),
     ]));
     table.add_row(Row::new(vec![
         Cell::new("Longest L-L-L Streak"),
-        Cell::new(&loss_streak.to_string())
+        Cell::new(&stats.loss_streak.to_string())
             .with_style(Attr::Bold)
             .with_style(Attr::ForegroundColor(color::RED)),
     ]));

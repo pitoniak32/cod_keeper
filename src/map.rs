@@ -51,6 +51,12 @@ impl MapStats {
 
 impl fmt::Display for MapStats {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} - {}", self.wins, self.losses)
+        write!(
+            f,
+            "{} - {} ({:.0} %)",
+            self.wins,
+            self.losses,
+            self.get_win_percentage()
+        )
     }
 }
