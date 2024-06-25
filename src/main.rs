@@ -307,7 +307,7 @@ fn build_stat_table(wins: usize, loses: usize, win_streak: usize, loss_streak: u
 
 fn save(games: &mut Vec<GamePlayed>, file_path: &str) {
     games.sort_by(|a, b| a.date_time.cmp(&b.date_time));
-    serde_json::to_writer(File::create(file_path).unwrap(), &games).unwrap();
+    serde_json::to_writer_pretty(File::create(file_path).unwrap(), &games).unwrap();
 }
 
 fn load(file_path: &str) -> Vec<GamePlayed> {
