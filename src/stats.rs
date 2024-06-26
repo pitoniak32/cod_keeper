@@ -41,7 +41,7 @@ impl StatsGroup {
 }
 
 impl Stats {
-    pub fn new(games: &mut Vec<GamePlayed>, today: DateTime<Local>) -> Stats {
+    pub fn new(games: &mut [GamePlayed], today: DateTime<Local>) -> Stats {
         let mut stats = Stats {
             lifet: StatsGroup {
                 wins: 0,
@@ -165,7 +165,12 @@ impl Stats {
     pub fn display_map_stats(&self) {
         println!();
         println!("Lifetime:\n---");
-        let mut life_map_stats = self.lifet.get_all_map_stats().iter().collect::<Vec<_>>();
+        let mut life_map_stats = self
+            .lifet
+            .get_all_map_stats()
+            .iter()
+            .collect::<Vec<_>>()
+            .clone();
 
         life_map_stats.sort_by(|a, b| {
             b.1.get_win_percentage()
@@ -178,7 +183,12 @@ impl Stats {
 
         println!();
         println!("Today:\n---");
-        let mut today_map_stats = self.today.get_all_map_stats().iter().collect::<Vec<_>>();
+        let mut today_map_stats = self
+            .today
+            .get_all_map_stats()
+            .iter()
+            .collect::<Vec<_>>()
+            .clone();
 
         today_map_stats.sort_by(|a, b| {
             b.1.get_win_percentage()
@@ -221,8 +231,8 @@ mod tests {
     fn test_stats_all_one_not_today() {
         // Arrange
         let mut games: Vec<GamePlayed> = vec![
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 1).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 2).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 1).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 2).unwrap(), },
         ];
         let mut maps_lifet = HashMap::new();
         maps_lifet.insert(GunfightMap::Asile9, MapStats { wins: 1, losses: 1 });
@@ -232,7 +242,7 @@ mod tests {
         assert_eq!(
             Stats::new(
                 &mut games,
-                Local.with_ymd_and_hms(2023, 09, 29, 0, 0, 0).unwrap()
+                Local.with_ymd_and_hms(2023, 9, 29, 0, 0, 0).unwrap()
             ),
             Stats {
                 lifet: StatsGroup { wins: 1, losses: 1, high_win_streak: 1, high_loss_streak: 1,  win_streak: 1, loss_streak: 0, last_was_win: true, map_stats: maps_lifet },
@@ -245,8 +255,8 @@ mod tests {
     fn test_stats_add_win() {
         // Arrange
         let mut games: Vec<GamePlayed> = vec![
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 1).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 2).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 1).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 2).unwrap(), },
         ];
         let mut maps_lifet = HashMap::new();
         maps_lifet.insert(GunfightMap::Asile9, MapStats { wins: 2, losses: 1 });
@@ -256,14 +266,14 @@ mod tests {
         // Act
         let mut stats = Stats::new(
             &mut games,
-            Local.with_ymd_and_hms(2023, 09, 29, 0, 0, 0).unwrap(),
+            Local.with_ymd_and_hms(2023, 9, 29, 0, 0, 0).unwrap(),
         );
         stats.add_win(
-            &mut GamePlayed { map: GunfightMap::Asile9, did_win: true, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 3).unwrap(), },
-            "09-29-2023",);
+            &GamePlayed { map: GunfightMap::Asile9, did_win: true, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 3).unwrap(), },
+            "9-29-2023",);
         stats.add_win(
-            &mut GamePlayed { map: GunfightMap::Docks, did_win: true, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 4).unwrap(), },
-            "09-29-2023",
+            &GamePlayed { map: GunfightMap::Docks, did_win: true, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 4).unwrap(), },
+            "9-29-2023",
         );
 
         // Assert
@@ -280,9 +290,9 @@ mod tests {
     fn test_stats_add_loss() {
         // Arrange
         let mut games: Vec<GamePlayed> = vec![
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 1).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 2).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 3).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 1).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 2).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 3).unwrap(), },
         ];
         let mut maps_lifet = HashMap::new();
         maps_lifet.insert(GunfightMap::Asile9, MapStats { wins: 2, losses: 2 });
@@ -292,15 +302,15 @@ mod tests {
         // Act
         let mut stats = Stats::new(
             &mut games,
-            Local.with_ymd_and_hms(2023, 09, 29, 0, 0, 0).unwrap(),
+            Local.with_ymd_and_hms(2023, 9, 29, 0, 0, 0).unwrap(),
         );
         stats.add_loss(
-            &mut GamePlayed { map: GunfightMap::Asile9, did_win: false, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 4).unwrap(), },
-            "09-29-2023",
+            &GamePlayed { map: GunfightMap::Asile9, did_win: false, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 4).unwrap(), },
+            "9-29-2023",
         );
         stats.add_loss(
-            &mut GamePlayed { map: GunfightMap::Docks, did_win: false, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 5).unwrap(), },
-            "09-29-2023",
+            &GamePlayed { map: GunfightMap::Docks, did_win: false, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 5).unwrap(), },
+            "9-29-2023",
         );
 
         // Assert
@@ -317,12 +327,12 @@ mod tests {
     fn test_stats_curr_streak_across_days() {
         // Arrange
         let mut games: Vec<GamePlayed> = vec![
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 1).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 2).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 3).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 1).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 2).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 3).unwrap(), },
             // New day
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 27, 0, 0, 2).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 27, 0, 0, 3).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 27, 0, 0, 2).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 27, 0, 0, 3).unwrap(), },
         ];
         let mut maps_lifet = HashMap::new();
         maps_lifet.insert(GunfightMap::Asile9, MapStats { wins: 5, losses: 1 });
@@ -332,15 +342,15 @@ mod tests {
         // Act
         let mut stats = Stats::new(
             &mut games,
-            Local.with_ymd_and_hms(2023, 09, 29, 0, 0, 0).unwrap(),
+            Local.with_ymd_and_hms(2023, 9, 29, 0, 0, 0).unwrap(),
         );
         stats.add_win(
-            &mut GamePlayed { map: GunfightMap::Asile9, did_win: true, date_time: Local.with_ymd_and_hms(2023, 09, 27, 0, 0, 4).unwrap(), },
-            "09-29-2023",
+            &GamePlayed { map: GunfightMap::Asile9, did_win: true, date_time: Local.with_ymd_and_hms(2023, 9, 27, 0, 0, 4).unwrap(), },
+            "9-29-2023",
         );
         stats.add_loss(
-            &mut GamePlayed { map: GunfightMap::Docks, did_win: false, date_time: Local.with_ymd_and_hms(2023, 09, 27, 0, 0, 5).unwrap(), },
-            "09-29-2023",
+            &GamePlayed { map: GunfightMap::Docks, did_win: false, date_time: Local.with_ymd_and_hms(2023, 9, 27, 0, 0, 5).unwrap(), },
+            "9-29-2023",
         );
 
         // Assert
@@ -357,33 +367,33 @@ mod tests {
     fn test_stats_all_one_today() {
         // Arrange
         let mut games: Vec<GamePlayed> = vec![
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 1).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 2).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 3).unwrap(), },
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 4).unwrap(), },
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 5).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 6).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 7).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 8).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 9).unwrap(), },
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 10).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 11).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 12).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 13).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 1).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 2).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 3).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 4).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 5).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 6).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 7).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 8).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 9).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 10).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 11).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 12).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 13).unwrap(), },
             // Different day to test multiday
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 1).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 2).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 3).unwrap(), },
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 4).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 5).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 6).unwrap(), },
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 7).unwrap(), },
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 8).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 9).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 10).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 11).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 12).unwrap(), },
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 13).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 1).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 2).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 3).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 4).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 5).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 6).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 7).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 8).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 9).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 10).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 11).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 12).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 13).unwrap(), },
         ];
         let mut maps_lifet = HashMap::new();
         maps_lifet.insert(GunfightMap::Asile9, MapStats { wins: 18, losses: 8 });
@@ -394,7 +404,7 @@ mod tests {
         assert_eq!(
             Stats::new(
                 &mut games,
-                Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 0).unwrap()
+                Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 0).unwrap()
             ),
             Stats {
                 lifet: StatsGroup { wins: 18, losses: 8, high_win_streak: 6, high_loss_streak: 2, win_streak: 0, loss_streak: 1, last_was_win: false, map_stats: maps_lifet },
@@ -407,18 +417,18 @@ mod tests {
     fn test_stats_get_map() {
         // Arrange
         let mut games: Vec<GamePlayed> = vec![
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 1).unwrap(), },
-            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 26, 0, 0, 2).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 09, 27, 0, 0, 2).unwrap(), },
-            GamePlayed { did_win: true, map: GunfightMap::Hill, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 3).unwrap(), },
-            GamePlayed { did_win: false, map: GunfightMap::GulagShowers, date_time: Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 4).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 1).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 2).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Asile9, date_time: Local.with_ymd_and_hms(2023, 9, 27, 0, 0, 2).unwrap(), },
+            GamePlayed { did_win: true, map: GunfightMap::Hill, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 3).unwrap(), },
+            GamePlayed { did_win: false, map: GunfightMap::GulagShowers, date_time: Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 4).unwrap(), },
         ];
 
         // Act / Assert
         assert_eq!(
             Stats::new(
                 &mut games,
-                Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 0).unwrap()
+                Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 0).unwrap()
             ).lifet.get_map_stats(&GunfightMap::Asile9),
             Some(&MapStats {
                 losses: 2,
@@ -428,7 +438,7 @@ mod tests {
         assert_eq!(
             Stats::new(
                 &mut games,
-                Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 0).unwrap()
+                Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 0).unwrap()
             ).lifet.get_map_stats(&GunfightMap::Hill),
             Some(&MapStats {
                 losses: 0,
@@ -438,7 +448,7 @@ mod tests {
         assert_eq!(
             Stats::new(
                 &mut games,
-                Local.with_ymd_and_hms(2023, 09, 28, 0, 0, 0).unwrap()
+                Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 0).unwrap()
             ).lifet.get_map_stats(&GunfightMap::GulagShowers),
             Some(&MapStats {
                 losses: 1,

@@ -43,7 +43,7 @@ fn main() {
 
     if !file_path.exists() {
         eprintln!("[ERROR]: Provided stats sheet path [{file_path:?}] doesn't exist.");
-        return
+        return;
     }
 
     let mut games = load(&file_path);
@@ -98,7 +98,7 @@ fn option_display_stats(stats: &Stats) {
                 table.set_format(*FORMAT_BOX_CHARS);
                 table.printstd();
             }
-            DisplayStatsOption::Lifetime => display_stats(&stats),
+            DisplayStatsOption::Lifetime => display_stats(stats),
             DisplayStatsOption::OneMap => {
                 let map = &Select::new(
                     "Which Map?",
@@ -154,26 +154,19 @@ fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path:
                 let did_win = Select::new("Did you win?", DidWinOption::iter().collect())
                     .prompt()
                     .unwrap();
-
-                let game: GamePlayed;
-
-                match did_win {
-                    DidWinOption::Yes => {
-                        game = GamePlayed {
-                            map,
-                            did_win: true,
-                            date_time: time,
-                        };
-                    }
-                    DidWinOption::No => {
-                        game = GamePlayed {
-                            map,
-                            did_win: false,
-                            date_time: time,
-                        };
-                    }
+                let game = match did_win {
+                    DidWinOption::Yes => GamePlayed {
+                        map,
+                        did_win: true,
+                        date_time: time,
+                    },
+                    DidWinOption::No => GamePlayed {
+                        map,
+                        did_win: false,
+                        date_time: time,
+                    },
                     DidWinOption::Back => break,
-                }
+                };
 
                 games.push(game.clone());
                 save(games, file_path);
@@ -258,7 +251,7 @@ fn build_stat_table(stats: &StatsGroup) -> Table {
     ]));
     table.add_row(Row::new(vec![
         Cell::new("Longest Dub Streak"),
-        Cell::new(&stats.win_streak.to_string())
+        Cell::new(&stats.high_win_streak.to_string())
             .with_style(Attr::Bold)
             .with_style(Attr::ForegroundColor(color::GREEN)),
     ]));
@@ -270,7 +263,7 @@ fn build_stat_table(stats: &StatsGroup) -> Table {
     ]));
     table.add_row(Row::new(vec![
         Cell::new("Longest L-L-L Streak"),
-        Cell::new(&stats.loss_streak.to_string())
+        Cell::new(&stats.high_loss_streak.to_string())
             .with_style(Attr::Bold)
             .with_style(Attr::ForegroundColor(color::RED)),
     ]));
