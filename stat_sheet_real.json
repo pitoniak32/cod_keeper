@@ -883,5 +883,35 @@
     "map": "Bazaar",
     "did_win": true,
     "date_time": "2024-06-24T20:46:31.248345935-04:00"
+  },
+  {
+    "map": "Hill",
+    "did_win": false,
+    "date_time": "2024-06-25T21:23:57.229401512-04:00"
+  },
+  {
+    "map": "Drainage",
+    "did_win": true,
+    "date_time": "2024-06-25T21:33:52.523652094-04:00"
+  },
+  {
+    "map": "GulagShowers",
+    "did_win": false,
+    "date_time": "2024-06-25T21:41:18.099285668-04:00"
+  },
+  {
+    "map": "Livestock",
+    "did_win": false,
+    "date_time": "2024-06-25T21:48:00.519871754-04:00"
+  },
+  {
+    "map": "Docks",
+    "did_win": true,
+    "date_time": "2024-06-25T21:55:55.929478688-04:00"
+  },
+  {
+    "map": "Cargo",
+    "did_win": true,
+    "date_time": "2024-06-25T22:05:10.397489813-04:00"
   }
 ]
