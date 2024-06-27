@@ -3,17 +3,16 @@ use anyhow::Result;
 use std::collections::HashMap;
 
 use chrono::{DateTime, Local};
-use serde::{Deserialize, Serialize};
 
 use crate::{error::Error, map::MapStats, GamePlayed, GunfightMap, DAY_FMT};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Stats {
     pub lifet: StatsGroup,
     pub today: StatsGroup,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct StatsGroup {
     pub wins: usize,
     pub losses: usize,
