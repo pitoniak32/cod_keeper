@@ -1,5 +1,7 @@
+use anyhow::Result;
 use chrono::{DateTime, Local};
 use clap::{Args, Parser};
+use error::Error;
 use inquire::Select;
 use map::GunfightMap;
 use menus::{DidWinOption, DisplayStatsOption, MainMenuOption};
@@ -18,6 +20,7 @@ use strum::IntoEnumIterator;
 
 const DAY_FMT: &str = "%m-%d-%Y";
 
+mod error;
 mod map;
 mod menus;
 mod stats;
@@ -36,39 +39,52 @@ pub struct SharedArgs {
     stats_path: PathBuf,
 }
 
-fn main() {
+fn main() -> Result<(), Error> {
     let cli = Cli::parse();
 
     let file_path = cli.args.stats_path;
 
     if !file_path.exists() {
         eprintln!("[ERROR]: Provided stats sheet path [{file_path:?}] doesn't exist.");
-        return;
+        return Ok(());
     }
 
     let mut games = load(&file_path);
-    let mut stats = Stats::new(&mut games, Local::now());
 
+    if let Err(error) = run_main_menu(&file_path, &mut games) {
+        eprintln!("[ERROR]: {error}");
+        eprintln!("Encountered error, saving and exiting...");
+        save(&mut games, &file_path);
+        std::process::exit(1);
+    }
+
+    save(&mut games, &file_path);
+
+    Ok(())
+}
+
+fn run_main_menu(file_path: &Path, games: &mut Vec<GamePlayed>) -> Result<(), Error> {
+    let mut stats = Stats::new(games, Local::now())?;
     loop {
         match Select::new(
             &format!(
                 "What would you like to do? (stat_sheet: {})",
-                &file_path.to_string_lossy()
+                file_path.to_string_lossy()
             ),
             MainMenuOption::iter().collect(),
         )
-        .prompt()
-        .unwrap()
+        .prompt()?
         {
             MainMenuOption::DisplayStats => {
-                option_display_stats(&stats);
+                option_display_stats(&stats)?;
             }
-            MainMenuOption::EnterGames => option_enter_games(&mut games, &mut stats, &file_path),
+            MainMenuOption::EnterGames => {
+                option_enter_games(games, &mut stats, file_path)?;
+            }
             MainMenuOption::Back => break,
         }
     }
-
-    save(&mut games, &file_path);
+    Ok(())
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
@@ -84,14 +100,13 @@ impl PartialEq for GamePlayed {
     }
 }
 
-fn option_display_stats(stats: &Stats) {
+fn option_display_stats(stats: &Stats) -> Result<(), Error> {
     loop {
         match Select::new(
             "What would you like to do?",
             DisplayStatsOption::iter().collect(),
         )
-        .prompt()
-        .unwrap()
+        .prompt()?
         {
             DisplayStatsOption::Today => {
                 let mut table = build_stat_table(&stats.today);
@@ -106,8 +121,7 @@ fn option_display_stats(stats: &Stats) {
                         .filter(|m| m != &GunfightMap::Back)
                         .collect(),
                 )
-                .prompt()
-                .unwrap();
+                .prompt()?;
                 if let Some(map_stats) = stats.lifet.get_map_stats(map) {
                     println!("{map}: {map_stats}");
                 }
@@ -133,14 +147,16 @@ fn option_display_stats(stats: &Stats) {
             DisplayStatsOption::Back => break,
         }
     }
+    Ok(())
 }
 
-fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path: &Path) {
+fn option_enter_games(
+    games: &mut Vec<GamePlayed>,
+    stats: &mut Stats,
+    file_path: &Path,
+) -> Result<(), Error> {
     loop {
-        match Select::new("Which Map?", GunfightMap::iter().collect())
-            .prompt()
-            .unwrap()
-        {
+        match Select::new("Which Map?", GunfightMap::iter().collect()).prompt()? {
             GunfightMap::Back => break,
             map => {
                 let map_stats = stats.lifet.get_map_stats(&map).expect(
@@ -151,9 +167,8 @@ fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path:
                 println!();
 
                 let time = Local::now();
-                let did_win = Select::new("Did you win?", DidWinOption::iter().collect())
-                    .prompt()
-                    .unwrap();
+                let did_win =
+                    Select::new("Did you win?", DidWinOption::iter().collect()).prompt()?;
                 let game = match did_win {
                     DidWinOption::Yes => GamePlayed {
                         map,
@@ -171,9 +186,9 @@ fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path:
                 games.push(game.clone());
                 save(games, file_path);
                 if game.did_win {
-                    stats.add_win(&game, &game.date_time.format(DAY_FMT).to_string());
+                    stats.add_win(&game, &game.date_time.format(DAY_FMT).to_string())?;
                 } else {
-                    stats.add_loss(&game, &game.date_time.format(DAY_FMT).to_string());
+                    stats.add_loss(&game, &game.date_time.format(DAY_FMT).to_string())?;
                 }
 
                 display_stats(stats);
@@ -203,6 +218,7 @@ fn option_enter_games(games: &mut Vec<GamePlayed>, stats: &mut Stats, file_path:
             }
         }
     }
+    Ok(())
 }
 
 fn display_stats(stats: &Stats) {
@@ -277,12 +293,18 @@ fn build_stat_table(stats: &StatsGroup) -> Table {
 
 fn save(games: &mut Vec<GamePlayed>, file_path: &Path) {
     games.sort_by(|a, b| a.date_time.cmp(&b.date_time));
-    serde_json::to_writer_pretty(File::create(file_path).unwrap(), &games).unwrap();
+    serde_json::to_writer_pretty(
+        File::create(file_path).expect("stats file should be able to be created"),
+        &games,
+    )
+    .expect("stats type should be able to be serialized into a writer");
 }
 
 fn load(file_path: &Path) -> Vec<GamePlayed> {
-    let mut games: Vec<GamePlayed> =
-        serde_json::from_str(&fs::read_to_string(file_path).unwrap()).unwrap();
+    let mut games: Vec<GamePlayed> = serde_json::from_str(
+        &fs::read_to_string(file_path).expect("stats file should be able to be read"),
+    )
+    .expect("stats file should be able to be deserialized into type");
     games.sort_by(|a, b| a.date_time.cmp(&b.date_time));
     games
 }

@@ -28,13 +28,7 @@ pub enum GunfightMap {
     VerdanskStadium,
 }
 
-// impl fmt::Display for GunfightMap {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-//       write!(f, "{}", self.to_string())
-//     }
-// }
-
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct MapStats {
     pub wins: usize,
     pub losses: usize,
