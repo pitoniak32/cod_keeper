@@ -1,6 +1,6 @@
 use anyhow::Result;
 use chrono::{DateTime, Local};
-use clap::{Args, Parser};
+use clap::{Args, Parser, ValueEnum};
 use error::Error;
 use inquire::Select;
 use map::GunfightMap;
@@ -17,6 +17,7 @@ use std::{
     path::{Path, PathBuf},
 };
 use strum::IntoEnumIterator;
+use strum_macros::Display;
 
 const DAY_FMT: &str = "%m-%d-%Y";
 
@@ -30,6 +31,9 @@ mod stats;
 #[command(arg_required_else_help = true)]
 pub struct Cli {
     #[clap(flatten)]
+    pub verbose: clap_verbosity_flag::Verbosity,
+
+    #[clap(flatten)]
     pub args: SharedArgs,
 }
 
@@ -37,10 +41,23 @@ pub struct Cli {
 pub struct SharedArgs {
     #[arg(short, long)]
     stats_path: PathBuf,
+
+    #[arg(short, long)]
+    cod_version: CodVersion,
+}
+
+#[derive(Debug, ValueEnum, Display, Clone)]
+pub enum CodVersion {
+    MW,
+    MW3,
 }
 
 fn main() -> Result<(), Error> {
     let cli = Cli::parse();
+
+    env_logger::builder()
+        .filter_level(cli.verbose.log_level_filter())
+        .init();
 
     let file_path = cli.args.stats_path;
 
@@ -51,7 +68,7 @@ fn main() -> Result<(), Error> {
 
     let mut games = load(&file_path);
 
-    if let Err(error) = run_main_menu(&file_path, &mut games) {
+    if let Err(error) = run_main_menu(&file_path, &mut games, &cli.args.cod_version) {
         eprintln!("[ERROR]: {error}");
         eprintln!("Encountered error, saving and exiting...");
         save(&mut games, &file_path);
@@ -63,8 +80,12 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn run_main_menu(file_path: &Path, games: &mut Vec<GamePlayed>) -> Result<(), Error> {
-    let mut stats = Stats::new(games, Local::now())?;
+fn run_main_menu(
+    file_path: &Path,
+    games: &mut Vec<GamePlayed>,
+    cod_version: &CodVersion,
+) -> Result<(), Error> {
+    let mut stats = Stats::new(games, Local::now(), cod_version)?;
     loop {
         match Select::new(
             &format!(
@@ -76,10 +97,10 @@ fn run_main_menu(file_path: &Path, games: &mut Vec<GamePlayed>) -> Result<(), Er
         .prompt()?
         {
             MainMenuOption::DisplayStats => {
-                option_display_stats(&stats)?;
+                option_display_stats(&stats, cod_version)?;
             }
             MainMenuOption::EnterGames => {
-                option_enter_games(games, &mut stats, file_path)?;
+                option_enter_games(games, &mut stats, file_path, cod_version)?;
             }
             MainMenuOption::Back => break,
         }
@@ -100,7 +121,7 @@ impl PartialEq for GamePlayed {
     }
 }
 
-fn option_display_stats(stats: &Stats) -> Result<(), Error> {
+fn option_display_stats(stats: &Stats, cod_version: &CodVersion) -> Result<(), Error> {
     loop {
         match Select::new(
             "What would you like to do?",
@@ -115,14 +136,8 @@ fn option_display_stats(stats: &Stats) -> Result<(), Error> {
             }
             DisplayStatsOption::Lifetime => display_stats(stats),
             DisplayStatsOption::OneMap => {
-                let map = &Select::new(
-                    "Which Map?",
-                    GunfightMap::iter()
-                        .filter(|m| m != &GunfightMap::Back)
-                        .collect(),
-                )
-                .prompt()?;
-                if let Some(map_stats) = stats.lifet.get_map_stats(map) {
+                let map = GunfightMap::get_map_choice(cod_version)?;
+                if let Some(map_stats) = stats.lifet.get_map_stats(&map) {
                     println!("{map}: {map_stats}");
                 }
             }
@@ -154,17 +169,17 @@ fn option_enter_games(
     games: &mut Vec<GamePlayed>,
     stats: &mut Stats,
     file_path: &Path,
+    cod_version: &CodVersion,
 ) -> Result<(), Error> {
     loop {
-        match Select::new("Which Map?", GunfightMap::iter().collect()).prompt()? {
+        match GunfightMap::get_map_choice(cod_version)? {
             GunfightMap::Back => break,
             map => {
-                let map_stats = stats.lifet.get_map_stats(&map).expect(
-                    "Could not find stats for this map for some reason. This is probably a bug.",
-                );
-                println!();
-                println!("{}: {} - {}", &map, &map_stats.wins, &map_stats.losses);
-                println!();
+                if let Some(map_stats) = stats.lifet.get_map_stats(&map) {
+                    println!();
+                    println!("{}: {} - {}", &map, &map_stats.wins, &map_stats.losses);
+                    println!();
+                }
 
                 let time = Local::now();
                 let did_win =

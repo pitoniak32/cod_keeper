@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Local};
 
-use crate::{error::Error, map::MapStats, GamePlayed, GunfightMap, DAY_FMT};
+use crate::{error::Error, map::MapStats, CodVersion, GamePlayed, GunfightMap, DAY_FMT};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Stats {
@@ -42,7 +42,41 @@ impl StatsGroup {
 }
 
 impl Stats {
-    pub fn new(games: &mut [GamePlayed], today: DateTime<Local>) -> Result<Self, Error> {
+    pub fn new(
+        games: &[GamePlayed],
+        today: DateTime<Local>,
+        cod_version: &CodVersion,
+    ) -> Result<Self, Error> {
+        let mut filtered_games: Vec<_> = match cod_version {
+            CodVersion::MW => games
+                .iter()
+                .filter(|g| {
+                    if GunfightMap::is_mw(&g.map) {
+                        true
+                    } else {
+                        log::error!(
+                            "Filtering map [{map}] that is not supported in [{cod_version}].",
+                            map = g.map
+                        );
+                        false
+                    }
+                })
+                .collect(),
+            CodVersion::MW3 => games
+                .iter()
+                .filter(|g| {
+                    if GunfightMap::is_mw3(&g.map) {
+                        true
+                    } else {
+                        log::error!(
+                            "Filtering map [{map}] that is not supported in [{cod_version}].",
+                            map = g.map
+                        );
+                        false
+                    }
+                })
+                .collect(),
+        };
         let mut stats = Self {
             lifet: StatsGroup {
                 wins: 0,
@@ -66,7 +100,7 @@ impl Stats {
             },
         };
         let today = today.format(DAY_FMT).to_string();
-        let errors = games
+        let errors = filtered_games
             .iter_mut()
             .map(|game| {
                 if game.did_win {
@@ -254,7 +288,7 @@ mod tests {
 
         // Act / Assert
         assert_eq!(
-            Stats::new(&mut games, Local::now())?,
+            Stats::new(&mut games, Local::now(),                &CodVersion::MW, )?,
             Stats {
                 lifet: StatsGroup {wins:0,losses:0,high_win_streak:0,high_loss_streak:0,win_streak:0,loss_streak:0,last_was_win:true, map_stats: HashMap::new() },
                 today: StatsGroup { wins: 0, losses: 0, high_win_streak: 0, high_loss_streak: 0,  win_streak: 0, loss_streak: 0, last_was_win: true, map_stats: HashMap::new() },
@@ -279,7 +313,8 @@ mod tests {
         assert_eq!(
             Stats::new(
                 &mut games,
-                Local.with_ymd_and_hms(2023, 9, 29, 0, 0, 0).unwrap()
+                Local.with_ymd_and_hms(2023, 9, 29, 0, 0, 0).unwrap(),
+                &CodVersion::MW,
             )?,
             Stats {
                 lifet: StatsGroup { wins: 1, losses: 1, high_win_streak: 1, high_loss_streak: 1,  win_streak: 1, loss_streak: 0, last_was_win: true, map_stats: maps_lifet },
@@ -305,6 +340,7 @@ mod tests {
         let mut stats = Stats::new(
             &mut games,
             Local.with_ymd_and_hms(2023, 9, 29, 0, 0, 0).unwrap(),
+            &CodVersion::MW,
         )?;
         stats.add_win(
             &GamePlayed { map: GunfightMap::Asile9, did_win: true, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 3).unwrap(), },
@@ -342,6 +378,7 @@ mod tests {
         let mut stats = Stats::new(
             &mut games,
             Local.with_ymd_and_hms(2023, 9, 29, 0, 0, 0).unwrap(),
+            &CodVersion::MW,
         )?;
         stats.add_loss(
             &GamePlayed { map: GunfightMap::Asile9, did_win: false, date_time: Local.with_ymd_and_hms(2023, 9, 26, 0, 0, 4).unwrap(), },
@@ -383,6 +420,7 @@ mod tests {
         let mut stats = Stats::new(
             &mut games,
             Local.with_ymd_and_hms(2023, 9, 29, 0, 0, 0).unwrap(),
+            &CodVersion::MW,
         )?;
         stats.add_win(
             &GamePlayed { map: GunfightMap::Asile9, did_win: true, date_time: Local.with_ymd_and_hms(2023, 9, 27, 0, 0, 4).unwrap(), },
@@ -445,7 +483,8 @@ mod tests {
         assert_eq!(
             Stats::new(
                 &mut games,
-                Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 0).unwrap()
+                Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 0).unwrap(),
+                &CodVersion::MW,
             )?,
             Stats {
                 lifet: StatsGroup { wins: 18, losses: 8, high_win_streak: 6, high_loss_streak: 2, win_streak: 0, loss_streak: 1, last_was_win: false, map_stats: maps_lifet },
@@ -470,7 +509,8 @@ mod tests {
         assert_eq!(
             Stats::new(
                 &mut games,
-                Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 0).unwrap()
+                Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 0).unwrap(),
+                &CodVersion::MW,
             )?.lifet.get_map_stats(&GunfightMap::Asile9),
             Some(&MapStats {
                 losses: 2,
@@ -480,7 +520,8 @@ mod tests {
         assert_eq!(
             Stats::new(
                 &mut games,
-                Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 0).unwrap()
+                Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 0).unwrap(),
+                &CodVersion::MW,
             )?.lifet.get_map_stats(&GunfightMap::Hill),
             Some(&MapStats {
                 losses: 0,
@@ -490,7 +531,8 @@ mod tests {
         assert_eq!(
             Stats::new(
                 &mut games,
-                Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 0).unwrap()
+                Local.with_ymd_and_hms(2023, 9, 28, 0, 0, 0).unwrap(),
+                &CodVersion::MW,
             )?.lifet.get_map_stats(&GunfightMap::GulagShowers),
             Some(&MapStats {
                 losses: 1,

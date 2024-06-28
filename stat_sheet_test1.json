@@ -1,0 +1,22 @@
+[
+  {
+    "map": "Rust",
+    "did_win": true,
+    "date_time": "2024-06-28T08:54:14.665327915-04:00"
+  },
+  {
+    "map": "Rust",
+    "did_win": true,
+    "date_time": "2024-06-28T08:56:12.590292267-04:00"
+  },
+  {
+    "map": "TrainingFacility",
+    "did_win": true,
+    "date_time": "2024-06-28T08:56:21.636532414-04:00"
+  },
+  {
+    "map": "Shipment",
+    "did_win": false,
+    "date_time": "2024-06-28T08:56:53.108094373-04:00"
+  }
+]
