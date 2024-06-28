@@ -968,5 +968,45 @@
     "map": "Station",
     "did_win": true,
     "date_time": "2024-06-27T17:24:07.577753407-04:00"
+  },
+  {
+    "map": "Asile9",
+    "did_win": true,
+    "date_time": "2024-06-27T21:23:29.640000299-04:00"
+  },
+  {
+    "map": "Hill",
+    "did_win": false,
+    "date_time": "2024-06-27T21:33:17.229111947-04:00"
+  },
+  {
+    "map": "Docks",
+    "did_win": false,
+    "date_time": "2024-06-27T21:43:43.160370781-04:00"
+  },
+  {
+    "map": "Drainage",
+    "did_win": false,
+    "date_time": "2024-06-27T21:51:28.805443879-04:00"
+  },
+  {
+    "map": "Livestock",
+    "did_win": false,
+    "date_time": "2024-06-27T21:56:55.538240099-04:00"
+  },
+  {
+    "map": "GulagShowers",
+    "did_win": true,
+    "date_time": "2024-06-27T22:05:02.924658058-04:00"
+  },
+  {
+    "map": "Shipment",
+    "did_win": false,
+    "date_time": "2024-06-27T22:12:45.478677823-04:00"
+  },
+  {
+    "map": "King",
+    "did_win": true,
+    "date_time": "2024-06-27T22:20:50.406998048-04:00"
   }
 ]
