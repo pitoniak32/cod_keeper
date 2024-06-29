@@ -148,5 +148,45 @@
     "map": "Asile9",
     "did_win": true,
     "date_time": "2024-06-24T22:00:09.560498575-04:00"
+  },
+  {
+    "map": "Asile9",
+    "did_win": true,
+    "date_time": "2024-06-29T13:32:23.358591547-04:00"
+  },
+  {
+    "map": "Cargo",
+    "did_win": false,
+    "date_time": "2024-06-29T13:32:27.256324377-04:00"
+  },
+  {
+    "map": "Rust",
+    "did_win": false,
+    "date_time": "2024-06-29T13:39:54.950371775-04:00"
+  },
+  {
+    "map": "Bazaar",
+    "did_win": false,
+    "date_time": "2024-06-29T13:42:57.148103736-04:00"
+  },
+  {
+    "map": "Shipment",
+    "did_win": true,
+    "date_time": "2024-06-29T13:50:43.417537703-04:00"
+  },
+  {
+    "map": "Shipment",
+    "did_win": true,
+    "date_time": "2024-06-29T13:54:54.084719059-04:00"
+  },
+  {
+    "map": "Asile9",
+    "did_win": false,
+    "date_time": "2024-06-29T13:54:59.450807303-04:00"
+  },
+  {
+    "map": "Bazaar",
+    "did_win": true,
+    "date_time": "2024-06-29T13:55:01.800617403-04:00"
   }
 ]

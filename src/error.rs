@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use inquire::InquireError;
 use thiserror::Error;
 
@@ -13,4 +15,7 @@ pub enum Error {
 
     #[error("failed to get user input")]
     FailedUserPrompt(#[from] InquireError),
+
+    #[error("could not find stats file at [{0:?}]")]
+    StatsFileNotFound(PathBuf),
 }
