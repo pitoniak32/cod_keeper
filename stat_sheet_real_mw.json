@@ -1008,5 +1008,35 @@
     "map": "King",
     "did_win": true,
     "date_time": "2024-06-27T22:20:50.406998048-04:00"
+  },
+  {
+    "map": "Docks",
+    "did_win": true,
+    "date_time": "2024-06-28T22:32:25.665261561-04:00"
+  },
+  {
+    "map": "Station",
+    "did_win": false,
+    "date_time": "2024-06-28T22:40:25.583306109-04:00"
+  },
+  {
+    "map": "King",
+    "did_win": true,
+    "date_time": "2024-06-28T22:48:41.665834936-04:00"
+  },
+  {
+    "map": "Rust",
+    "did_win": false,
+    "date_time": "2024-06-28T22:56:52.288787440-04:00"
+  },
+  {
+    "map": "Speedball",
+    "did_win": false,
+    "date_time": "2024-06-28T23:02:23.652076681-04:00"
+  },
+  {
+    "map": "Drainage",
+    "did_win": false,
+    "date_time": "2024-06-28T23:09:19.349479111-04:00"
   }
 ]

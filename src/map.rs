@@ -42,9 +42,12 @@ pub enum GunfightMap {
 }
 
 const OPTIONS_MW3: &[GunfightMap] = &[
+    GunfightMap::DasHaus,
+    GunfightMap::StashHouse,
     GunfightMap::Alley,
     GunfightMap::Blacksite,
     GunfightMap::Exhibit,
+    GunfightMap::Meat,
     GunfightMap::TrainingFacility,
 ];
 const OPTIONS_BOTH: &[GunfightMap] = &[GunfightMap::Back, GunfightMap::Rust, GunfightMap::Shipment];

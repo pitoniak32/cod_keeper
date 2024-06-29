@@ -1,0 +1,32 @@
+[
+  {
+    "map": "Meat",
+    "did_win": true,
+    "date_time": "2024-06-28T11:38:46.599399539-04:00"
+  },
+  {
+    "map": "Exhibit",
+    "did_win": false,
+    "date_time": "2024-06-28T11:46:25.553509952-04:00"
+  },
+  {
+    "map": "Shipment",
+    "did_win": false,
+    "date_time": "2024-06-28T11:54:05.471088345-04:00"
+  },
+  {
+    "map": "DasHaus",
+    "did_win": true,
+    "date_time": "2024-06-28T12:01:10.947075958-04:00"
+  },
+  {
+    "map": "Alley",
+    "did_win": true,
+    "date_time": "2024-06-28T12:09:59.802464413-04:00"
+  },
+  {
+    "map": "Exhibit",
+    "did_win": true,
+    "date_time": "2024-06-28T12:18:55.671205804-04:00"
+  }
+]
