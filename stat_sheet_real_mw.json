@@ -1063,5 +1063,35 @@
     "map": "Rust",
     "did_win": true,
     "date_time": "2024-06-29T20:07:03.059209380-04:00"
+  },
+  {
+    "map": "VerdanskStadium",
+    "did_win": false,
+    "date_time": "2024-07-03T21:23:34.557350404-04:00"
+  },
+  {
+    "map": "Cargo",
+    "did_win": false,
+    "date_time": "2024-07-03T21:29:45.848432658-04:00"
+  },
+  {
+    "map": "Stack",
+    "did_win": true,
+    "date_time": "2024-07-03T21:37:02.787314646-04:00"
+  },
+  {
+    "map": "GulagShowers",
+    "did_win": true,
+    "date_time": "2024-07-03T21:45:10.128326493-04:00"
+  },
+  {
+    "map": "Docks",
+    "did_win": false,
+    "date_time": "2024-07-03T21:52:37.338252105-04:00"
+  },
+  {
+    "map": "VerdanskStadium",
+    "did_win": false,
+    "date_time": "2024-07-03T21:59:23.514390715-04:00"
   }
 ]
